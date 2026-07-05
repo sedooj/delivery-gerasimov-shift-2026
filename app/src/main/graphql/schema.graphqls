@@ -1,0 +1,45 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  deliveryPoints: [DeliveryPoint!]!
+  deliveryPackageTypes: [DeliveryPackageType!]!
+}
+
+type Mutation {
+  calculateDelivery(input: CalculateDeliveryInput!): DeliveryCalculation!
+}
+
+type DeliveryPoint {
+  id: ID!
+  name: String!
+  region: String!
+}
+
+type DeliveryPackageType {
+  id: ID!
+  name: String!
+  description: String!
+  maxWeightKg: Int!
+  basePriceRubles: Int!
+}
+
+type DeliveryCalculation {
+  amountRubles: Int!
+  currency: String!
+  etaDays: Int!
+  routeLabel: String!
+  deliveryTypeLabel: String!
+}
+
+input CalculateDeliveryInput {
+  senderPointId: ID!
+  receiverPointId: ID!
+  packageTypeId: ID!
+  lengthCm: Int
+  widthCm: Int
+  heightCm: Int
+  weightKg: Float
+}

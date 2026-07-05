@@ -1,0 +1,7 @@
+query getDeliveryPoints {
+  deliveryPoints {
+    id
+    name
+    region
+  }
+}

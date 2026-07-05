@@ -1,0 +1,9 @@
+query getDeliveryPackageTypes {
+  deliveryPackageTypes {
+    id
+    name
+    description
+    maxWeightKg
+    basePriceRubles
+  }
+}

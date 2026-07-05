@@ -1,0 +1,9 @@
+mutation calculateDelivery($input: CalculateDeliveryInput!) {
+  calculateDelivery(input: $input) {
+    amountRubles
+    currency
+    etaDays
+    routeLabel
+    deliveryTypeLabel
+  }
+}
