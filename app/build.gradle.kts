@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.apollo)
@@ -6,6 +8,16 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.compose)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use(::load)
+    }
+}
+
+val deliveryGraphQlServerUrl = providers.gradleProperty("deliveryGraphQlServerUrl")
+    .orElse(localProperties.getProperty("deliveryGraphQlServerUrl", ""))
 
 android {
     namespace = "ru.sedooj.delivery_gerasimov_shift_2026"
@@ -20,7 +32,11 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "GRAPHQL_SERVER_URL", "\"\"")
+        buildConfigField(
+            "String",
+            "GRAPHQL_SERVER_URL",
+            "\"${deliveryGraphQlServerUrl.get()}\""
+        )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
