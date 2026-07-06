@@ -14,7 +14,7 @@ import ru.sedooj.delivery_gerasimov_shift_2026.domain.repository.DeliveryReposit
 
 class DeliveryRepositoryImpl @Inject constructor(
     private val remoteDataSource: DeliveryRemoteDataSource,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DeliveryRepository {
 
     override suspend fun getDeliveryPoints(): List<DeliveryPoint> = withContext(ioDispatcher) {

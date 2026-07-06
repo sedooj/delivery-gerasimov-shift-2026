@@ -2,11 +2,11 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.apollo)
-    alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.apollo)
+    alias(libs.plugins.hilt.android)
 }
 
 val localProperties = Properties().apply {
@@ -21,9 +21,7 @@ val deliveryGraphQlServerUrl = providers.gradleProperty("deliveryGraphQlServerUr
 
 android {
     namespace = "ru.sedooj.delivery_gerasimov_shift_2026"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ru.sedooj.delivery_gerasimov_shift_2026"

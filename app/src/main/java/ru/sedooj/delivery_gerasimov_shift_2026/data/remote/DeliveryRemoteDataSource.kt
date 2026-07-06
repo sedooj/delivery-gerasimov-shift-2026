@@ -1,6 +1,7 @@
 package ru.sedooj.delivery_gerasimov_shift_2026.data.remote
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.Optional
 import javax.inject.Inject
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculation
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
@@ -50,10 +51,10 @@ class DeliveryRemoteDataSource @Inject constructor(
                     senderPointId = request.senderPointId,
                     receiverPointId = request.receiverPointId,
                     packageTypeId = request.packageTypeId,
-                    lengthCm = request.lengthCm,
-                    widthCm = request.widthCm,
-                    heightCm = request.heightCm,
-                    weightKg = request.weightKg
+                    lengthCm = request.lengthCm.toOptional(),
+                    widthCm = request.widthCm.toOptional(),
+                    heightCm = request.heightCm.toOptional(),
+                    weightKg = request.weightKg?.toDouble().toOptional()
                 )
             )
         ).execute()
@@ -66,4 +67,12 @@ class DeliveryRemoteDataSource @Inject constructor(
             deliveryTypeLabel = data.deliveryTypeLabel
         )
     }
+}
+
+private fun Int?.toOptional(): Optional<Int?> {
+    return if (this == null) Optional.Absent else Optional.Present(this)
+}
+
+private fun Double?.toOptional(): Optional<Double?> {
+    return if (this == null) Optional.Absent else Optional.Present(this)
 }
