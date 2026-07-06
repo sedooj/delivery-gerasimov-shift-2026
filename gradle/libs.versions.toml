@@ -11,7 +11,7 @@ hiltNavigationCompose = "1.2.0"
 lifecycle = "2.8.7"
 activityCompose = "1.12.4"
 kotlin = "2.0.21"
-composeBom = "2024.09.00"
+composeBom = "2026.01.00"
 
 [libraries]
 apollo-api = { group = "com.apollographql.apollo", name = "apollo-api", version.ref = "apollo" }
@@ -20,6 +20,8 @@ apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", 
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
