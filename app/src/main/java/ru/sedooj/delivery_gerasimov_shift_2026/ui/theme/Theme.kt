@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 private val LightColorScheme = lightColorScheme(
     primary = Ink,
     onPrimary = SurfaceCard,
-    secondary = AccentGreen,
+    secondary = Green_500,
     onSecondary = Ink,
     tertiary = AccentGreenSoft,
     background = Canvas,
