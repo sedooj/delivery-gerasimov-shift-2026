@@ -37,22 +37,57 @@ class CalculatorViewModel @Inject constructor(
 
     fun onIntent(intent: CalculatorIntent) {
         when (intent) {
+            is CalculatorIntent.CityPickerOpened -> {
+                _uiState.update { it.copy(cityPickerTarget = intent.target) }
+            }
+
+            CalculatorIntent.CityPickerDismissed -> {
+                _uiState.update { it.copy(cityPickerTarget = null) }
+            }
+
             is CalculatorIntent.SenderPointChanged -> {
-                _uiState.update { it.copy(selectedSenderPointId = intent.pointId, quote = null) }
+                _uiState.update {
+                    it.copy(
+                        selectedSenderPointId = intent.pointId,
+                        cityPickerTarget = null,
+                        quote = null
+                    )
+                }
             }
 
             is CalculatorIntent.ReceiverPointChanged -> {
-                _uiState.update { it.copy(selectedReceiverPointId = intent.pointId, quote = null) }
+                _uiState.update {
+                    it.copy(
+                        selectedReceiverPointId = intent.pointId,
+                        cityPickerTarget = null,
+                        quote = null
+                    )
+                }
+            }
+
+            CalculatorIntent.PackageSheetOpened -> {
+                _uiState.update { it.copy(isPackageSheetVisible = true) }
+            }
+
+            CalculatorIntent.PackageSheetDismissed -> {
+                _uiState.update { it.copy(isPackageSheetVisible = false) }
+            }
+
+            is CalculatorIntent.PackageInputModeChanged -> {
+                _uiState.update {
+                    it.copy(
+                        packageInputMode = intent.mode,
+                        quote = null
+                    )
+                }
             }
 
             is CalculatorIntent.PackageTypeChanged -> {
-                _uiState.update { it.copy(selectedPackageTypeId = intent.packageTypeId, quote = null) }
-            }
-
-            is CalculatorIntent.ExactDimensionsToggled -> {
                 _uiState.update {
                     it.copy(
-                        exactDimensionsEnabled = intent.enabled,
+                        selectedPackageTypeId = intent.packageTypeId,
+                        packageInputMode = PackageInputMode.Approximate,
+                        isPackageSheetVisible = false,
                         quote = null
                     )
                 }
@@ -76,7 +111,6 @@ class CalculatorViewModel @Inject constructor(
                 val packageTypes = packageTypesDeferred.await()
                 val defaultSender = points.firstOrNull()?.id.orEmpty()
                 val defaultReceiver = points.getOrNull(1)?.id ?: defaultSender
-                val defaultPackageType = packageTypes.firstOrNull()?.id.orEmpty()
 
                 _uiState.update {
                     it.copy(
@@ -84,8 +118,7 @@ class CalculatorViewModel @Inject constructor(
                         deliveryPoints = points,
                         packageTypes = packageTypes,
                         selectedSenderPointId = defaultSender,
-                        selectedReceiverPointId = defaultReceiver,
-                        selectedPackageTypeId = defaultPackageType
+                        selectedReceiverPointId = defaultReceiver
                     )
                 }
             }.onFailure { throwable ->
@@ -111,11 +144,12 @@ class CalculatorViewModel @Inject constructor(
             _uiState.update { it.copy(isCalculating = true, errorMessage = null) }
 
             runCatching {
+                val selectedPackageTypeId = resolvePackageTypeId(currentState)
                 calculateDeliveryUseCase(
                     request = DeliveryCalculationRequest(
                         senderPointId = currentState.selectedSenderPointId,
                         receiverPointId = currentState.selectedReceiverPointId,
-                        packageTypeId = currentState.selectedPackageTypeId,
+                        packageTypeId = selectedPackageTypeId,
                         lengthCm = currentState.lengthInput.toIntOrNull(),
                         widthCm = currentState.widthInput.toIntOrNull(),
                         heightCm = currentState.heightInput.toIntOrNull(),
@@ -143,6 +177,22 @@ class CalculatorViewModel @Inject constructor(
     }
 
     private fun updateDimension(update: CalculatorUiState.() -> CalculatorUiState) {
-        _uiState.update { state -> state.update() }
+        _uiState.update { state ->
+            state.update().copy(
+                packageInputMode = PackageInputMode.Exact
+            )
+        }
+    }
+
+    private fun resolvePackageTypeId(state: CalculatorUiState): String {
+        if (state.selectedPackageTypeId.isNotBlank()) {
+            return state.selectedPackageTypeId
+        }
+
+        val weight = state.weightInput.toFloatOrNull() ?: 0f
+        return state.packageTypes
+            .firstOrNull { weight <= it.maxWeightKg }
+            ?.id
+            ?: state.packageTypes.lastOrNull()?.id.orEmpty()
     }
 }

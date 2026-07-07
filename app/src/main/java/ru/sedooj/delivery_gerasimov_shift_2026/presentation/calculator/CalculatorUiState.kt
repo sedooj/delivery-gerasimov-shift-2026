@@ -3,6 +3,16 @@ package ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
 
+enum class CityPickerTarget {
+    Sender,
+    Receiver
+}
+
+enum class PackageInputMode {
+    Approximate,
+    Exact
+}
+
 data class CalculatorQuoteUi(
     val amountText: String,
     val etaText: String,
@@ -17,8 +27,10 @@ data class CalculatorUiState(
     val packageTypes: List<DeliveryPackageType> = emptyList(),
     val selectedSenderPointId: String = "",
     val selectedReceiverPointId: String = "",
+    val cityPickerTarget: CityPickerTarget? = null,
+    val isPackageSheetVisible: Boolean = false,
     val selectedPackageTypeId: String = "",
-    val exactDimensionsEnabled: Boolean = false,
+    val packageInputMode: PackageInputMode = PackageInputMode.Approximate,
     val lengthInput: String = "",
     val widthInput: String = "",
     val heightInput: String = "",
@@ -26,9 +38,17 @@ data class CalculatorUiState(
     val quote: CalculatorQuoteUi? = null,
     val errorMessage: String? = null
 ) {
+    val hasExactDimensions: Boolean
+        get() = lengthInput.isNotBlank() &&
+            widthInput.isNotBlank() &&
+            heightInput.isNotBlank() &&
+            weightInput.isNotBlank()
+
     val canCalculate: Boolean
         get() = selectedSenderPointId.isNotBlank() &&
             selectedReceiverPointId.isNotBlank() &&
-            selectedPackageTypeId.isNotBlank() &&
-            (!exactDimensionsEnabled || weightInput.isNotBlank())
+            when (packageInputMode) {
+                PackageInputMode.Approximate -> selectedPackageTypeId.isNotBlank()
+                PackageInputMode.Exact -> hasExactDimensions
+            }
 }

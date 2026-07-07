@@ -12,30 +12,48 @@ object LocalDeliverySeedData {
         DeliveryPoint(id = "msk", name = "Москва", region = "Москва"),
         DeliveryPoint(id = "spb", name = "Санкт-Петербург", region = "Ленинградская область"),
         DeliveryPoint(id = "nsk", name = "Новосибирск", region = "Новосибирская область"),
-        DeliveryPoint(id = "tmk", name = "Томск", region = "Томская область")
+        DeliveryPoint(id = "tmk", name = "Томск", region = "Томская область"),
+        DeliveryPoint(id = "nvk", name = "Новокузнецк", region = "Кемеровская область"),
+        DeliveryPoint(id = "kry", name = "Красноярск", region = "Красноярский край"),
+        DeliveryPoint(id = "ekb", name = "Екатеринбург", region = "Свердловская область"),
+        DeliveryPoint(id = "khv", name = "Хабаровск", region = "Хабаровский край")
     )
 
     val packageTypes = listOf(
         DeliveryPackageType(
             id = "envelope",
             name = "Конверт",
-            description = "Документы и компактные вложения",
+            description = "42x36x5 см",
             maxWeightKg = 1,
             basePriceRubles = 290
         ),
         DeliveryPackageType(
+            id = "box_xs",
+            name = "Короб XS",
+            description = "17x12x9 см",
+            maxWeightKg = 2,
+            basePriceRubles = 360
+        ),
+        DeliveryPackageType(
             id = "small_box",
             name = "Короб S",
-            description = "Лёгкие посылки до 5 кг",
+            description = "23x9x10 см",
             maxWeightKg = 5,
             basePriceRubles = 430
         ),
         DeliveryPackageType(
             id = "medium_box",
             name = "Короб M",
-            description = "Стандартные отправления до 12 кг",
+            description = "31x22x12 см",
             maxWeightKg = 12,
             basePriceRubles = 610
+        ),
+        DeliveryPackageType(
+            id = "large_box",
+            name = "Короб L",
+            description = "45x31x20 см",
+            maxWeightKg = 20,
+            basePriceRubles = 790
         )
     )
 
