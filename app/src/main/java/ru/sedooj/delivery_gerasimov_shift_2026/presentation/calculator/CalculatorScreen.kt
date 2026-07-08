@@ -2,6 +2,7 @@ package ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,8 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,7 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -53,10 +56,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -69,17 +71,19 @@ import kotlinx.coroutines.flow.collectLatest
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.AccentGreenSoft
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Canvas
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Foreground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Green_500
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Ink
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.InkSoft
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Input
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.PrimaryForeground
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface as FieldStroke
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceCard
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.nunitoFontFamily
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface as FieldStroke
 
 @Composable
 fun CalculatorRoute(
@@ -163,7 +167,7 @@ fun CalculatorScreen(
                             top = 32.dp,
                             bottom = 98.dp
                         ),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         item {
                             HeroLayout(
@@ -171,7 +175,9 @@ fun CalculatorScreen(
                                 onIntent = onIntent
                             )
                         }
-                        item { PromoBanner() }
+                        item {
+                            IllustrationCard()
+                        }
                         item {
                             AnimatedVisibility(visible = state.quote != null) {
                                 state.quote?.let { quote ->
@@ -209,17 +215,43 @@ private fun HeroLayout(
     BoxWithConstraints {
         val verticalLayout = maxWidth < 720.dp
         if (verticalLayout) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CalculatorCard(state = state, onIntent = onIntent)
-                IllustrationCard()
+                ParcelTrackerCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Foreground, RoundedCornerShape(24.dp)),
+                    onClick = {
+                        //TODO
+                    },
+                    onValueChanged = {
+                        //TODO
+                    },
+                    value = "",
+                    placeholder = "Номер заказа",
+                    searchButtonEnabled = true
+                )
             }
         } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(modifier = Modifier.weight(1.1f)) {
                     CalculatorCard(state = state, onIntent = onIntent)
                 }
                 Box(modifier = Modifier.weight(0.9f)) {
-                    IllustrationCard()
+                    ParcelTrackerCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, Foreground, RoundedCornerShape(24.dp)),
+                        onClick = {
+                            //TODO
+                        },
+                        onValueChanged = {
+                            //TODO
+                        },
+                        value = "",
+                        placeholder = "Номер заказа",
+                        searchButtonEnabled = true,
+                    )
                 }
             }
         }
@@ -246,7 +278,8 @@ private fun CalculatorCard(
                 text = "Рассчитать доставку",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold
-                )
+                ),
+                fontFamily = nunitoFontFamily,
             )
 
             Column(
@@ -273,7 +306,6 @@ private fun CalculatorCard(
                 PackageField(
                     title = "Размер посылки",
                     value = state.packageFieldText(),
-                    isPlaceholder = state.packageFieldText() == "Не выбран",
                     onClick = { onIntent(CalculatorIntent.PackageSheetOpened) }
                 )
             }
@@ -304,8 +336,9 @@ private fun CalculatorCard(
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.5.sp,
-                                    lineHeight = 21.sp
-                                )
+                                    lineHeight = 21.sp,
+                                    fontFamily = nunitoFontFamily,
+                                ),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -322,8 +355,107 @@ private fun CalculatorCard(
                 Text(
                     text = state.errorMessage,
                     color = Color(0xFFB53B2D),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = nunitoFontFamily,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ParcelTrackerCard(
+    modifier: Modifier = Modifier,
+    value: String = "",
+    placeholder: String,
+    searchButtonEnabled: Boolean,
+    onValueChanged: (String) -> Unit,
+    onClick: () -> Unit
+) {
+    Surface(
+        color = SurfaceCard,
+        shape = RoundedCornerShape(24.dp),
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text(
+                text = "Отследить посылку",
+                fontFamily = nunitoFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                letterSpacing = 0.5.sp,
+                lineHeight = 32.sp,
+            )
+            OutlinedTextField(
+                value = value,
+                onValueChange = { input ->
+                    if (input.all { it.isDigit() || it == '.' || it == ',' }) {
+                        onValueChanged(input.replace(',', '.'))
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sizeIn(minHeight = 52.dp),
+                shape = RoundedCornerShape(9999.dp),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = Foreground,
+                    fontWeight = FontWeight.Medium
+                ),
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 24.sp,
+                        letterSpacing = 0.5.sp,
+                        fontFamily = nunitoFontFamily,
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = SurfaceCard,
+                    unfocusedContainerColor = SurfaceCard,
+                    focusedIndicatorColor = FieldStroke,
+                    unfocusedIndicatorColor = FieldStroke,
+                    focusedTextColor = Foreground,
+                    unfocusedTextColor = Foreground
+                )
+            )
+            Surface(
+                color = Foreground,
+                shape = RoundedCornerShape(9999.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                TextButton(
+                    onClick = onClick,
+                    enabled = searchButtonEnabled,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    //TODO add is searching state
+//                if (state.isCalculating) {
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(22.dp),
+//                        color = SurfaceCard,
+//                        strokeWidth = 2.dp
+//                    )
+//                } else {
+                    Text(
+                        text = "Найти",
+                        color = Input,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                        letterSpacing = 0.5.sp,
+                        lineHeight = 24.sp,
+                        fontFamily = nunitoFontFamily
+                    )
+//                }
+                }
             }
         }
     }
@@ -363,7 +495,6 @@ private fun CityField(
 private fun PackageField(
     title: String,
     value: String,
-    isPlaceholder: Boolean,
     onClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -371,7 +502,7 @@ private fun PackageField(
         SelectorFieldContainer(
             value = value,
             onClick = onClick,
-            valueColor = if (isPlaceholder) InkSoft else Foreground
+            valueColor = Foreground
         )
     }
 }
@@ -402,14 +533,15 @@ private fun SelectorFieldContainer(
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = valueColor,
                 fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                lineHeight = 20.sp
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                lineHeight = 24.sp,
+                fontFamily = nunitoFontFamily,
             )
         )
         Icon(
             painter = painterResource(R.drawable.chevron_down),
             contentDescription = null,
-            tint = Foreground
+            tint = Color.Unspecified
         )
     }
 }
@@ -421,7 +553,8 @@ private fun FieldLabel(text: String) {
         color = Foreground,
         style = MaterialTheme.typography.bodyMedium.copy(
             letterSpacing = 0.5.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            fontFamily = nunitoFontFamily,
         )
     )
 }
@@ -433,17 +566,20 @@ private fun PopularCitiesRow(
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         cities.forEach { city ->
             Text(
                 text = city.name,
                 modifier = Modifier.clickable { onCityClick(city) },
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = FieldStroke,
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp,
-                    textDecoration = TextDecoration.Underline
+                    color = Surface,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 24.sp,
+                    letterSpacing = 0.5.sp,
+                    textDecoration = TextDecoration.Underline,
+                    fontFamily = nunitoFontFamily,
                 )
             )
         }
@@ -486,7 +622,8 @@ private fun CityPickerScreen(
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Black,
                         fontSize = 20.sp,
-                        lineHeight = 28.sp
+                        lineHeight = 28.sp,
+                        fontFamily = nunitoFontFamily,
                     )
                 )
             }
@@ -523,7 +660,8 @@ private fun CityPickerRow(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.Normal,
-                color = Foreground
+                color = Foreground,
+                fontFamily = nunitoFontFamily,
             )
         )
         Icon(
@@ -552,8 +690,10 @@ private fun PackageTypeBottomSheet(
             text = "Размер посылки",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Black,
-                fontSize = 20.sp,
-                lineHeight = 28.sp
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                lineHeight = 22.sp,
+                letterSpacing = 0.5.sp,
+                fontFamily = nunitoFontFamily
             )
         )
 
@@ -665,7 +805,8 @@ private fun PackageModeButton(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Foreground
+                    color = Foreground,
+                    fontFamily = nunitoFontFamily,
                 )
             )
         }
@@ -703,7 +844,8 @@ private fun PackagePresetCard(
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp,
-                    lineHeight = 24.sp
+                    lineHeight = 24.sp,
+                    fontFamily = nunitoFontFamily,
                 )
             )
             Text(
@@ -711,7 +853,8 @@ private fun PackagePresetCard(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Foreground,
                     fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
+                    fontFamily = nunitoFontFamily,
                 )
             )
         }
@@ -739,7 +882,8 @@ private fun PackagePresetThumb(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Black,
-                color = Foreground
+                color = Foreground,
+                fontFamily = nunitoFontFamily,
             )
         )
     }
@@ -773,7 +917,8 @@ private fun ExactDimensionField(
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = Foreground,
                 fontSize = 13.sp,
-                lineHeight = 18.sp
+                lineHeight = 18.sp,
+                fontFamily = nunitoFontFamily,
             )
         )
         OutlinedTextField(
@@ -795,7 +940,8 @@ private fun ExactDimensionField(
                     text = placeholder,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = FieldStroke,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = nunitoFontFamily,
                     )
                 )
             },
@@ -815,118 +961,48 @@ private fun ExactDimensionField(
 @Composable
 private fun IllustrationCard() {
     Surface(
-        color = SurfaceCard,
-        shape = RoundedCornerShape(30.dp),
+        color = DeliveryCardBackground,
+        shape = RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.5.dp, Ink, RoundedCornerShape(30.dp))
+            .height(90.dp),
     ) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Image(
+                painter = painterResource(R.drawable.hands),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(width = 178.52.dp, height = 111.8.dp)
+                    .offset(x = 42.dp, y = (-8).dp)
+                    .rotate(42.77f)
+            )
+        }
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF79D367),
-                                Color(0xFFB9EDA9)
-                            )
-                        )
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Inventory2,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(72.dp)
-                )
-                Text(
-                    text = "Быстро,\nпрозрачно,\nнадёжно",
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(18.dp),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = Ink
-                    )
-                )
-            }
-
-            Surface(
-                color = Color(0xFF8DDA7B),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = "Бесплатная доставка",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Text(
-                        text = "для каждого третьего заказа после регистрации",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = InkSoft
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PromoBanner() {
-    Surface(
-        color = SurfaceCard,
-        shape = RoundedCornerShape(28.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.5.dp, Ink, RoundedCornerShape(28.dp))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Точный расчёт перед отправкой",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Выберите города, укажите формат посылки и сразу получите стоимость и срок.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = InkSoft
-                    )
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(AccentGreenSoft),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Inventory2,
-                    contentDescription = null,
-                    tint = Ink
-                )
-            }
+            Text(
+                text = "Бесплатная доставка",
+                color = PrimaryForeground,
+                style = MaterialTheme.typography.headlineSmall,
+                fontFamily = nunitoFontFamily,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+                lineHeight = 32.sp,
+            )
+            Text(
+                text = "за приведенного друга",
+                color = PrimaryForeground,
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = nunitoFontFamily,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.5.sp,
+                lineHeight = 22.sp,
+            )
         }
     }
 }
@@ -947,13 +1023,15 @@ private fun QuoteCard(quote: CalculatorQuoteUi) {
             Text(
                 text = "Ваш заказ",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = nunitoFontFamily,
                 )
             )
             Text(
                 text = quote.deliveryTypeLabel,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = InkSoft
+                    color = InkSoft,
+                    fontFamily = nunitoFontFamily,
                 )
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -977,7 +1055,8 @@ private fun QuoteRow(
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = InkSoft
+                color = InkSoft,
+                fontFamily = nunitoFontFamily,
             ),
             modifier = Modifier.weight(1f)
         )
@@ -988,7 +1067,8 @@ private fun QuoteRow(
             } else {
                 MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
             },
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
+            fontFamily = nunitoFontFamily,
         )
     }
 }
