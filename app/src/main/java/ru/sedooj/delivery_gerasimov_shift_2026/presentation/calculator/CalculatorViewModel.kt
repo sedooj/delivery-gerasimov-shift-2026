@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,10 +114,8 @@ class CalculatorViewModel @Inject constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             runCatching {
-                val pointsDeferred = async { getDeliveryPointsUseCase() }
-                val packageTypesDeferred = async { getDeliveryPackageTypesUseCase() }
-                val points = pointsDeferred.await()
-                val packageTypes = packageTypesDeferred.await()
+                val points = getDeliveryPointsUseCase()
+                val packageTypes = getDeliveryPackageTypesUseCase()
                 val defaultSender = points.firstOrNull()?.id.orEmpty()
                 val defaultReceiver = points.getOrNull(1)?.id ?: defaultSender
 
@@ -160,10 +157,10 @@ class CalculatorViewModel @Inject constructor(
                         senderPointId = currentState.selectedSenderPointId,
                         receiverPointId = currentState.selectedReceiverPointId,
                         packageTypeId = selectedPackageTypeId,
-                        lengthCm = currentState.lengthInput.toIntOrNull(),
-                        widthCm = currentState.widthInput.toIntOrNull(),
-                        heightCm = currentState.heightInput.toIntOrNull(),
-                        weightKg = currentState.weightInput.toFloatOrNull()
+                        lengthCm = currentState.lengthInput.toDoubleOrNull(),
+                        widthCm = currentState.widthInput.toDoubleOrNull(),
+                        heightCm = currentState.heightInput.toDoubleOrNull(),
+                        weightKg = currentState.weightInput.toDoubleOrNull()
                     )
                 )
             }.onSuccess { calculation ->
@@ -206,15 +203,10 @@ class CalculatorViewModel @Inject constructor(
     }
 
     private fun resolvePackageTypeId(state: CalculatorUiState): String {
-        if (state.selectedPackageTypeId.isNotBlank()) {
-            return state.selectedPackageTypeId
+        return when (state.packageInputMode) {
+            PackageInputMode.Approximate -> state.selectedPackageTypeId
+            PackageInputMode.Exact -> state.selectedPackageTypeId
         }
-
-        val weight = state.weightInput.toFloatOrNull() ?: 0f
-        return state.packageTypes
-            .firstOrNull { weight <= it.maxWeightKg }
-            ?.id
-            ?: state.packageTypes.lastOrNull()?.id.orEmpty()
     }
 
     private companion object {

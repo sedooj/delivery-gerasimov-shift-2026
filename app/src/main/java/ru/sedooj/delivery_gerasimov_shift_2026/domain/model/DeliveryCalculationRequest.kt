@@ -4,8 +4,8 @@ data class DeliveryCalculationRequest(
     val senderPointId: String,
     val receiverPointId: String,
     val packageTypeId: String,
-    val lengthCm: Int?,
-    val widthCm: Int?,
-    val heightCm: Int?,
-    val weightKg: Float?
+    val lengthCm: Double?,
+    val widthCm: Double?,
+    val heightCm: Double?,
+    val weightKg: Double?
 )

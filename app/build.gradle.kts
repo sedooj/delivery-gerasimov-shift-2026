@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.apollo)
     alias(libs.plugins.hilt.android)
 }
 
@@ -16,8 +15,8 @@ val localProperties = Properties().apply {
     }
 }
 
-val deliveryGraphQlServerUrl = providers.gradleProperty("deliveryGraphQlServerUrl")
-    .orElse(localProperties.getProperty("deliveryGraphQlServerUrl", ""))
+val deliveryApiBaseUrl = providers.gradleProperty("deliveryApiBaseUrl")
+    .orElse(localProperties.getProperty("deliveryApiBaseUrl", ""))
 
 android {
     namespace = "ru.sedooj.delivery_gerasimov_shift_2026"
@@ -32,8 +31,8 @@ android {
 
         buildConfigField(
             "String",
-            "GRAPHQL_SERVER_URL",
-            "\"${deliveryGraphQlServerUrl.get()}\""
+            "DELIVERY_API_BASE_URL",
+            "\"${deliveryApiBaseUrl.get()}\""
         )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,9 +75,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.apollo.api)
-    implementation(libs.apollo.normalized.cache)
-    implementation(libs.apollo.runtime)
     implementation(libs.hilt.android)
     implementation(libs.kotlinx.coroutines.android)
     kapt(libs.hilt.compiler)
@@ -93,10 +89,4 @@ dependencies {
 
 kapt {
     correctErrorTypes = true
-}
-
-apollo {
-    service("delivery") {
-        packageName.set("ru.sedooj.delivery_gerasimov_shift_2026.graphql")
-    }
 }

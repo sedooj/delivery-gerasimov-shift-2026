@@ -4,7 +4,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import ru.sedooj.delivery_gerasimov_shift_2026.data.di.IoDispatcher
-import ru.sedooj.delivery_gerasimov_shift_2026.data.local.LocalDeliverySeedData
 import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.DeliveryRemoteDataSource
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculation
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
@@ -18,15 +17,15 @@ class DeliveryRepositoryImpl @Inject constructor(
 ) : DeliveryRepository {
 
     override suspend fun getDeliveryPoints(): List<DeliveryPoint> = withContext(ioDispatcher) {
-        remoteDataSource.getDeliveryPoints() ?: LocalDeliverySeedData.points
+        remoteDataSource.getDeliveryPoints()
     }
 
     override suspend fun getDeliveryPackageTypes(): List<DeliveryPackageType> = withContext(ioDispatcher) {
-        remoteDataSource.getDeliveryPackageTypes() ?: LocalDeliverySeedData.packageTypes
+        remoteDataSource.getDeliveryPackageTypes()
     }
 
     override suspend fun calculateDelivery(request: DeliveryCalculationRequest): DeliveryCalculation =
         withContext(ioDispatcher) {
-            remoteDataSource.calculateDelivery(request) ?: LocalDeliverySeedData.calculate(request)
+            remoteDataSource.calculateDelivery(request)
         }
 }

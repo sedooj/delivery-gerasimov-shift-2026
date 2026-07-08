@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,14 +73,16 @@ import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.BorderHard
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Canvas
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Foreground
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Green_500
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Ink
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.InkSoft
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Input
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.PrimaryForeground
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Secondary
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SecondaryForeground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceCard
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface as FieldStroke
@@ -113,7 +116,8 @@ fun CalculatorRoute(
 fun CalculatorScreen(
     state: CalculatorUiState,
     snackbarHostState: SnackbarHostState,
-    onIntent: (CalculatorIntent) -> Unit
+    onIntent: (CalculatorIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val packageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -122,7 +126,7 @@ fun CalculatorScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         containerColor = Canvas,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -175,14 +179,20 @@ fun CalculatorScreen(
                         item {
                             HeroLayout(
                                 state = state,
-                                onIntent = onIntent
+                                onIntent = onIntent,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        item { IllustrationCard() }
+                        item {
+                            IllustrationCard(modifier = Modifier.fillMaxWidth())
+                        }
                         item {
                             AnimatedVisibility(visible = state.quote != null) {
                                 state.quote?.let { quote ->
-                                    QuoteCard(quote = quote)
+                                    QuoteCard(
+                                        quote = quote,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
                             }
                         }
@@ -202,7 +212,8 @@ fun CalculatorScreen(
         ) {
             PackageTypeBottomSheet(
                 state = state,
-                onIntent = onIntent
+                onIntent = onIntent,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -211,9 +222,10 @@ fun CalculatorScreen(
 @Composable
 private fun HeroLayout(
     state: CalculatorUiState,
-    onIntent: (CalculatorIntent) -> Unit
+    onIntent: (CalculatorIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints {
+    BoxWithConstraints(modifier = modifier) {
         val verticalLayout = maxWidth < CalculatorScreenDimens.twoPaneBreakpoint
         if (verticalLayout) {
             Column(
@@ -270,12 +282,13 @@ private fun HeroLayout(
 @Composable
 private fun CalculatorCard(
     state: CalculatorUiState,
-    onIntent: (CalculatorIntent) -> Unit
+    onIntent: (CalculatorIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
         color = SurfaceCard,
         shape = RoundedCornerShape(CalculatorScreenDimens.primaryCardCornerRadius),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .border(
                 CalculatorScreenDimens.defaultBorderWidth,
@@ -420,9 +433,10 @@ private fun ParcelTrackerCard(
                         text = stringResource(R.string.calculator_tracking_placeholder),
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Normal,
                             lineHeight = CalculatorScreenTypography.trackingPlaceholderLineHeight,
-                            letterSpacing = CalculatorScreenTypography.mediumLetterSpacing
+                            letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
+                            color = Input
                         )
                     )
                 },
@@ -478,9 +492,13 @@ private fun CityField(
     icon: Painter,
     quickCities: List<DeliveryPoint>,
     onFieldClick: () -> Unit,
-    onQuickCityClick: (DeliveryPoint) -> Unit
+    onQuickCityClick: (DeliveryPoint) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.fieldTitleGap)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.fieldTitleGap)
+    ) {
         FieldLabel(text = title)
         SelectorFieldContainer(
             value = value,
@@ -505,9 +523,13 @@ private fun CityField(
 private fun PackageField(
     title: String,
     value: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.fieldTitleGap)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.fieldTitleGap)
+    ) {
         FieldLabel(text = title)
         SelectorFieldContainer(
             value = value,
@@ -521,11 +543,12 @@ private fun PackageField(
 private fun SelectorFieldContainer(
     value: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     valueColor: Color = Foreground,
     prefix: @Composable (() -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(CalculatorScreenDimens.capsuleCornerRadius))
             .border(
@@ -563,9 +586,13 @@ private fun SelectorFieldContainer(
 }
 
 @Composable
-private fun FieldLabel(text: String) {
+private fun FieldLabel(
+    text: String,
+    modifier: Modifier = Modifier
+) {
     NunitoText(
         text = text,
+        modifier = modifier,
         color = Foreground,
         style = MaterialTheme.typography.bodyMedium.copy(
             letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
@@ -577,9 +604,11 @@ private fun FieldLabel(text: String) {
 @Composable
 private fun PopularCitiesRow(
     cities: List<DeliveryPoint>,
-    onCityClick: (DeliveryPoint) -> Unit
+    onCityClick: (DeliveryPoint) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     FlowRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.popularCityHorizontalGap),
         verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.popularCityVerticalGap)
     ) {
@@ -605,10 +634,11 @@ private fun CityPickerScreen(
     title: String,
     cities: List<DeliveryPoint>,
     onDismiss: () -> Unit,
-    onCitySelected: (String) -> Unit
+    onCitySelected: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = Background
     ) {
         Column(
@@ -653,7 +683,8 @@ private fun CityPickerScreen(
                 items(cities) { city ->
                     CityPickerRow(
                         city = city,
-                        onClick = { onCitySelected(city.id) }
+                        onClick = { onCitySelected(city.id) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -664,10 +695,11 @@ private fun CityPickerScreen(
 @Composable
 private fun CityPickerRow(
     city: DeliveryPoint,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = CalculatorScreenDimens.cityPickerRowVerticalPadding),
@@ -694,10 +726,11 @@ private fun CityPickerRow(
 @Composable
 private fun PackageTypeBottomSheet(
     state: CalculatorUiState,
-    onIntent: (CalculatorIntent) -> Unit
+    onIntent: (CalculatorIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
             .padding(
@@ -719,18 +752,37 @@ private fun PackageTypeBottomSheet(
 
         PackageModeSwitcher(
             selectedMode = state.packageInputMode,
-            onModeChanged = { onIntent(CalculatorIntent.PackageInputModeChanged(it)) }
+            onModeChanged = { onIntent(CalculatorIntent.PackageInputModeChanged(it)) },
+            modifier = Modifier.fillMaxWidth()
         )
 
         when (state.packageInputMode) {
             PackageInputMode.Approximate -> {
                 Column(verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.packagePresetGap)) {
-                    state.packageTypes.forEachIndexed { index, packageType ->
+                    state.packageTypes.forEach { packageType ->
                         PackagePresetCard(
                             packageType = packageType,
-                            accentColor = presetAccentColor(index),
                             isSelected = state.selectedPackageTypeId == packageType.id,
-                            onClick = { onIntent(CalculatorIntent.PackageTypeChanged(packageType.id)) }
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(CalculatorScreenDimens.packagePresetCardHeight)
+                                .clip(RoundedCornerShape(CalculatorScreenDimens.packagePresetCornerRadius))
+                                .border(
+                                    width = CalculatorScreenDimens.defaultBorderWidth,
+                                    color = BorderHard,
+                                    shape = RoundedCornerShape(CalculatorScreenDimens.packagePresetCornerRadius)
+                                )
+                                .clickable(onClick = {
+                                    onIntent(
+                                        CalculatorIntent.PackageTypeChanged(
+                                            packageType.id
+                                        )
+                                    )
+                                })
+                                .padding(
+                                    horizontal = CalculatorScreenDimens.packagePresetHorizontalPadding,
+                                    vertical = CalculatorScreenDimens.packagePresetVerticalPadding
+                                )
                         )
                     }
                 }
@@ -742,25 +794,29 @@ private fun PackageTypeBottomSheet(
                         label = stringResource(R.string.calculator_dimension_length),
                         value = state.lengthInput,
                         placeholder = stringResource(R.string.calculator_dimension_centimeters_placeholder),
-                        onValueChanged = { onIntent(CalculatorIntent.LengthChanged(it)) }
+                        onValueChanged = { onIntent(CalculatorIntent.LengthChanged(it)) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     ExactDimensionField(
                         label = stringResource(R.string.calculator_dimension_width),
                         value = state.widthInput,
                         placeholder = stringResource(R.string.calculator_dimension_centimeters_placeholder),
-                        onValueChanged = { onIntent(CalculatorIntent.WidthChanged(it)) }
+                        onValueChanged = { onIntent(CalculatorIntent.WidthChanged(it)) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     ExactDimensionField(
                         label = stringResource(R.string.calculator_dimension_height),
                         value = state.heightInput,
                         placeholder = stringResource(R.string.calculator_dimension_centimeters_placeholder),
-                        onValueChanged = { onIntent(CalculatorIntent.HeightChanged(it)) }
+                        onValueChanged = { onIntent(CalculatorIntent.HeightChanged(it)) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     ExactDimensionField(
                         label = stringResource(R.string.calculator_dimension_weight),
                         value = state.weightInput,
                         placeholder = stringResource(R.string.calculator_dimension_kilograms_placeholder),
-                        onValueChanged = { onIntent(CalculatorIntent.WeightChanged(it)) }
+                        onValueChanged = { onIntent(CalculatorIntent.WeightChanged(it)) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -771,12 +827,13 @@ private fun PackageTypeBottomSheet(
 @Composable
 private fun PackageModeSwitcher(
     selectedMode: PackageInputMode,
-    onModeChanged: (PackageInputMode) -> Unit
+    onModeChanged: (PackageInputMode) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
         color = CalculatorScreenColors.segmentedControlContainer,
         shape = RoundedCornerShape(CalculatorScreenDimens.capsuleCornerRadius),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -839,52 +896,50 @@ private fun PackageModeButton(
 @Composable
 private fun PackagePresetCard(
     packageType: DeliveryPackageType,
-    accentColor: Color,
     isSelected: Boolean,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(CalculatorScreenDimens.packagePresetCornerRadius))
-            .border(
-                width = CalculatorScreenDimens.defaultBorderWidth,
-                color = if (isSelected) Foreground else FieldStroke.copy(alpha = CalculatorScreenAlpha.unselectedBorderAlpha),
-                shape = RoundedCornerShape(CalculatorScreenDimens.packagePresetCornerRadius)
-            )
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = CalculatorScreenDimens.packagePresetHorizontalPadding,
-                vertical = CalculatorScreenDimens.packagePresetVerticalPadding
-            ),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.packagePresetContentGap)
     ) {
         PackagePresetThumb(
             modifier = Modifier
-                .size(CalculatorScreenDimens.packagePresetThumbSize)
-                .clip(RoundedCornerShape(CalculatorScreenDimens.packagePresetThumbCornerRadius)),
+                .fillMaxHeight()
+                .padding(
+                    start = CalculatorScreenDimens.packagePresetGap,
+                    top = CalculatorScreenDimens.packagePresetGap
+                )
+                .align(Alignment.Top),
             packageType = packageType
         )
-        Spacer(modifier = Modifier.width(CalculatorScreenDimens.packagePresetContentGap))
-        Column(modifier = Modifier.weight(CalculatorScreenDimens.fullWeight)) {
+        Column(modifier = Modifier.weight(CalculatorScreenDimens.fullWeight), verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.packageGapBetweenTitleAndSubtitle)) {
             NunitoText(
                 text = packageType.name,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     fontSize = CalculatorScreenTypography.packagePresetTitleSize,
-                    lineHeight = CalculatorScreenTypography.defaultLineHeight
+                    lineHeight = CalculatorScreenTypography.packagePresetTitleLineHeight,
+                    color = Foreground,
+                    letterSpacing = CalculatorScreenTypography.packagePresetTitleLetterSpacing
                 )
             )
             NunitoText(
                 text = packageType.description,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Foreground,
+                    fontWeight = FontWeight.Medium,
                     fontSize = CalculatorScreenTypography.packagePresetSubtitleSize,
-                    lineHeight = CalculatorScreenTypography.packagePresetSubtitleLineHeight
+                    lineHeight = CalculatorScreenTypography.packagePresetSubtitleLineHeight,
+                    letterSpacing = CalculatorScreenTypography.packagePresetSubtitleLetterSpacing
                 )
             )
         }
-        SelectionDot(selected = isSelected)
+        SelectionDot(
+            selected = isSelected,
+            modifier = Modifier.align(Alignment.Top).padding(top = 16.dp).size(CalculatorScreenDimens.selectionDotSize)
+        )
     }
 }
 
@@ -894,28 +949,32 @@ private fun PackagePresetThumb(
     packageType: DeliveryPackageType
 ) {
     val imageResId = packageType.getIconResOrNull()
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(imageResId ?: R.drawable.green_ellipse),
-            contentDescription = null,
-            contentScale = ContentScale.Crop
-        )
+    imageResId?.let { iconResId ->
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Image(
+                painter = painterResource(iconResId),
+                contentDescription = null,
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 
 @Composable
-private fun SelectionDot(selected: Boolean) {
+private fun SelectionDot(
+    selected: Boolean,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
-            .size(CalculatorScreenDimens.selectionDotSize)
+        modifier = modifier
             .clip(CircleShape)
-            .background(if (selected) Foreground else CalculatorScreenColors.selectionDotBackground)
+            .background(if (selected) SecondaryForeground else Secondary)
             .border(
                 width = CalculatorScreenDimens.defaultBorderWidth,
-                color = if (selected) Foreground else CalculatorScreenColors.selectionDotBorder,
+                color = if (selected) SecondaryForeground else Secondary,
                 shape = CircleShape
             )
     )
@@ -926,9 +985,13 @@ private fun ExactDimensionField(
     label: String,
     value: String,
     placeholder: String,
-    onValueChanged: (String) -> Unit
+    onValueChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.exactFieldLabelGap)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.exactFieldLabelGap)
+    ) {
         NunitoText(
             text = stringResource(R.string.calculator_dimension_field_label, label),
             style = MaterialTheme.typography.bodyMedium.copy(
@@ -974,11 +1037,13 @@ private fun ExactDimensionField(
 }
 
 @Composable
-private fun IllustrationCard() {
+private fun IllustrationCard(
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = DeliveryCardBackground,
         shape = RoundedCornerShape(CalculatorScreenDimens.primaryCardCornerRadius),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(CalculatorScreenDimens.illustrationCardHeight)
     ) {
@@ -1029,11 +1094,14 @@ private fun IllustrationCard() {
 }
 
 @Composable
-private fun QuoteCard(quote: CalculatorQuoteUi) {
+private fun QuoteCard(
+    quote: CalculatorQuoteUi,
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = SurfaceCard,
         shape = RoundedCornerShape(CalculatorScreenDimens.quoteCardCornerRadius),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .border(
                 CalculatorScreenDimens.quoteCardBorderWidth,
@@ -1060,16 +1128,19 @@ private fun QuoteCard(quote: CalculatorQuoteUi) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
             QuoteRow(
                 title = stringResource(R.string.calculator_quote_route_label),
-                value = quote.routeLabel
+                value = quote.routeLabel,
+                modifier = Modifier.fillMaxWidth()
             )
             QuoteRow(
                 title = stringResource(R.string.calculator_quote_eta_label),
-                value = stringResource(R.string.calculator_quote_eta_format, quote.etaDays)
+                value = stringResource(R.string.calculator_quote_eta_format, quote.etaDays),
+                modifier = Modifier.fillMaxWidth()
             )
             QuoteRow(
                 title = stringResource(R.string.calculator_quote_total_label),
                 value = stringResource(R.string.calculator_quote_amount_format, quote.amountRubles),
-                highlighted = true
+                highlighted = true,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -1079,10 +1150,11 @@ private fun QuoteCard(quote: CalculatorQuoteUi) {
 private fun QuoteRow(
     title: String,
     value: String,
-    highlighted: Boolean = false
+    highlighted: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         NunitoText(
@@ -1139,18 +1211,6 @@ private fun List<DeliveryPackageType>.selectedPackageTypeName(selectedId: String
     return firstOrNull { it.id == selectedId }?.name.orEmpty()
 }
 
-@Composable
-private fun DeliveryPackageType.shortLabel(): String {
-    return when {
-        id == CalculatorScreenIds.packageEnvelope -> stringResource(R.string.calculator_package_label_a4)
-        id == CalculatorScreenIds.packageBoxXs -> stringResource(R.string.calculator_package_label_xs)
-        id == CalculatorScreenIds.packageBoxS -> stringResource(R.string.calculator_package_label_s)
-        id == CalculatorScreenIds.packageBoxM -> stringResource(R.string.calculator_package_label_m)
-        id == CalculatorScreenIds.packageBoxL -> stringResource(R.string.calculator_package_label_xl)
-        else -> name.take(2).uppercase()
-    }
-}
-
 @DrawableRes
 private fun DeliveryPackageType.getIconResOrNull(): Int? {
     return when (this.id) {
@@ -1159,23 +1219,9 @@ private fun DeliveryPackageType.getIconResOrNull(): Int? {
         CalculatorScreenIds.packageBoxS -> R.drawable.box_s
         CalculatorScreenIds.packageBoxM -> R.drawable.box_m
         CalculatorScreenIds.packageBoxL -> R.drawable.box_l
-        CalculatorScreenIds.packageBoxXl-> R.drawable.box_xl
+        CalculatorScreenIds.packageBoxXl -> R.drawable.box_xl
         else -> null
     }
-}
-
-private fun presetAccentColor(index: Int): Color {
-    return when (index % CalculatorScreenNumbers.packageAccentModulo) {
-        0 -> CalculatorScreenColors.packageAccentEnvelope
-        1 -> CalculatorScreenColors.packageAccentXs
-        2 -> CalculatorScreenColors.packageAccentS
-        3 -> CalculatorScreenColors.packageAccentM
-        else -> Green_500.copy(alpha = CalculatorScreenAlpha.largePackageAccentAlpha)
-    }
-}
-
-private object CalculatorScreenNumbers {
-    const val packageAccentModulo = 5
 }
 
 private object CalculatorScreenIds {
@@ -1185,10 +1231,12 @@ private object CalculatorScreenIds {
     const val cityMoscow = "msk"
     const val packageEnvelope = "envelope"
     const val packageBoxXs = "box_xs"
-    const val packageBoxS = "small_box"
-    const val packageBoxM = "medium_box"
-    const val packageBoxL = "large_box"
-    const val packageBoxXl = "box_xl"
+    const val packageBoxS = "box-s"
+    const val packageBoxM = "box-m"
+    const val packageBoxL = "box-l"
+    const val packageBag = "bag"
+    const val packagePallet = "pallet"
+    const val packageBoxXl = "box-xl"
 
     val preferredCityOrder = listOf(
         citySaintPetersburg,
@@ -1200,8 +1248,6 @@ private object CalculatorScreenIds {
 
 private object CalculatorScreenAlpha {
     const val unselectedBorderAlpha = 0.45f
-    const val thumbGradientEndAlpha = 0.55f
-    const val largePackageAccentAlpha = 0.7f
 }
 
 private object CalculatorScreenTypography {
@@ -1214,9 +1260,12 @@ private object CalculatorScreenTypography {
     val cityPickerTitleSize = 20.sp
     val cityPickerTitleLineHeight = 28.sp
     val sheetTitleLineHeight = 22.sp
-    val packagePresetTitleSize = 18.sp
-    val packagePresetSubtitleSize = 12.sp
-    val packagePresetSubtitleLineHeight = 16.sp
+    val packagePresetTitleSize = 24.sp
+    val packagePresetSubtitleSize = 14.sp
+    val packagePresetTitleLineHeight = 32.sp
+    val packagePresetSubtitleLineHeight = 22.sp
+    val packagePresetTitleLetterSpacing = 0.5.sp
+    val packagePresetSubtitleLetterSpacing = 0.5.sp
     val exactFieldLabelSize = 13.sp
     val exactFieldLabelLineHeight = 18.sp
 }
@@ -1226,10 +1275,6 @@ private object CalculatorScreenColors {
     val segmentedControlContainer = Color(0xFFF4F4F1)
     val selectionDotBackground = Color(0xFFF4F4F1)
     val selectionDotBorder = Color(0xFFE7E4DC)
-    val packageAccentEnvelope = Color(0xFF8AE3A2)
-    val packageAccentXs = Color(0xFFD8B88A)
-    val packageAccentS = Color(0xFFCEB28A)
-    val packageAccentM = Color(0xFFDDBA97)
 }
 
 private object CalculatorScreenDimens {
@@ -1280,13 +1325,16 @@ private object CalculatorScreenDimens {
     val segmentedControlItemVerticalPadding = 12.dp
     val segmentedControlSelectedElevation = 2.dp
     val packagePresetGap = 8.dp
-    val packagePresetCornerRadius = 18.dp
-    val packagePresetHorizontalPadding = 12.dp
-    val packagePresetVerticalPadding = 12.dp
-    val packagePresetContentGap = 12.dp
+    val packageGapBetweenTitleAndSubtitle = 4.dp
+    val packagePresetCornerRadius = 16.dp
+    val packagePresetHorizontalPadding = 16.dp
+    val packageCardSelectedDotGap = 16.dp
+    val packagePresetVerticalPadding = 8.dp
+    val packagePresetContentGap = 16.dp
     val packagePresetThumbSize = 36.dp
     val packagePresetThumbCornerRadius = 10.dp
-    val selectionDotSize = 18.dp
+    val packagePresetCardHeight = 90.dp
+    val selectionDotSize = 16.dp
     val exactFieldGap = 12.dp
     val exactFieldLabelGap = 6.dp
     val illustrationCardHeight = 90.dp

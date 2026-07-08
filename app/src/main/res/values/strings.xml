@@ -26,12 +26,6 @@
     <string name="calculator_quote_route_label">Маршрут</string>
     <string name="calculator_quote_eta_label">Срок</string>
     <string name="calculator_quote_total_label">Итого</string>
-    <string name="calculator_package_label_a4">A4</string>
-    <string name="calculator_package_label_xs">XS</string>
-    <string name="calculator_package_label_xl">XL</string>
-    <string name="calculator_package_label_s">S</string>
-    <string name="calculator_package_label_m">M</string>
-    <string name="calculator_package_label_l">L</string>
     <string name="calculator_package_not_selected">Не выбран</string>
     <string name="calculator_package_exact_format">%1$sx%2$sx%3$s см, %4$s кг</string>
     <string name="calculator_quote_amount_format">%1$d ₽</string>

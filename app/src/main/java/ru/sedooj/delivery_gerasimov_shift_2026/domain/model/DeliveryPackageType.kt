@@ -4,6 +4,8 @@ data class DeliveryPackageType(
     val id: String,
     val name: String,
     val description: String,
-    val maxWeightKg: Int,
-    val basePriceRubles: Int
+    val lengthCm: Double,
+    val widthCm: Double,
+    val heightCm: Double,
+    val weightKg: Double
 )
