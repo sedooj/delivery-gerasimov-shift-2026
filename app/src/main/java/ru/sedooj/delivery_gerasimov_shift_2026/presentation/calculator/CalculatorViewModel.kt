@@ -1,10 +1,12 @@
 package ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.qualifiers.ApplicationContext
+import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.CalculateDeliveryUseCase
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPackageTypesUseCase
@@ -20,6 +24,7 @@ import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPointsU
 
 @HiltViewModel
 class CalculatorViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val getDeliveryPointsUseCase: GetDeliveryPointsUseCase,
     private val getDeliveryPackageTypesUseCase: GetDeliveryPackageTypesUseCase,
     private val calculateDeliveryUseCase: CalculateDeliveryUseCase
@@ -97,8 +102,13 @@ class CalculatorViewModel @Inject constructor(
             is CalculatorIntent.WidthChanged -> updateDimension { copy(widthInput = intent.value, quote = null) }
             is CalculatorIntent.HeightChanged -> updateDimension { copy(heightInput = intent.value, quote = null) }
             is CalculatorIntent.WeightChanged -> updateDimension { copy(weightInput = intent.value, quote = null) }
+            is CalculatorIntent.TrackingNumberChanged -> {
+                _uiState.update { it.copy(trackingNumber = intent.value) }
+            }
+
+            CalculatorIntent.ParcelSearchClicked -> searchParcel()
             CalculatorIntent.CalculateClicked -> calculate()
-            CalculatorIntent.ErrorDismissed -> _uiState.update { it.copy(errorMessage = null) }
+            CalculatorIntent.ErrorDismissed -> _uiState.update { it.copy(errorMessageRes = null) }
         }
     }
 
@@ -122,9 +132,9 @@ class CalculatorViewModel @Inject constructor(
                     )
                 }
             }.onFailure { throwable ->
-                val message = throwable.message ?: "Не удалось загрузить данные для расчёта"
-                _uiState.update { it.copy(isLoading = false, errorMessage = message) }
-                _effects.emit(CalculatorEffect.ShowMessage(message))
+                val messageRes = R.string.calculator_error_load
+                _uiState.update { it.copy(isLoading = false, errorMessageRes = messageRes) }
+                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
             }
         }
     }
@@ -133,15 +143,15 @@ class CalculatorViewModel @Inject constructor(
         val currentState = _uiState.value
         if (!currentState.canCalculate) {
             viewModelScope.launch {
-                val message = "Заполните обязательные поля перед расчётом"
-                _uiState.update { it.copy(errorMessage = message) }
-                _effects.emit(CalculatorEffect.ShowMessage(message))
+                val messageRes = R.string.calculator_error_fill_required
+                _uiState.update { it.copy(errorMessageRes = messageRes) }
+                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
             }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isCalculating = true, errorMessage = null) }
+            _uiState.update { it.copy(isCalculating = true, errorMessageRes = null) }
 
             runCatching {
                 val selectedPackageTypeId = resolvePackageTypeId(currentState)
@@ -161,18 +171,29 @@ class CalculatorViewModel @Inject constructor(
                     it.copy(
                         isCalculating = false,
                         quote = CalculatorQuoteUi(
-                            amountText = "${calculation.amountRubles} \u20BD",
-                            etaText = "${calculation.etaDays} дн.",
+                            amountRubles = calculation.amountRubles,
+                            etaDays = calculation.etaDays,
                             routeLabel = calculation.routeLabel,
                             deliveryTypeLabel = calculation.deliveryTypeLabel
                         )
                     )
                 }
             }.onFailure { throwable ->
-                val message = throwable.message ?: "Не удалось рассчитать доставку"
-                _uiState.update { it.copy(isCalculating = false, errorMessage = message) }
-                _effects.emit(CalculatorEffect.ShowMessage(message))
+                val messageRes = R.string.calculator_error_calculation
+                _uiState.update { it.copy(isCalculating = false, errorMessageRes = messageRes) }
+                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
             }
+        }
+    }
+
+    private fun searchParcel() {
+        val currentState = _uiState.value
+        if (!currentState.canSearchParcel) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isParcelSearching = true) }
+            delay(PARCEL_SEARCH_PLACEHOLDER_DELAY_MS)
+            _uiState.update { it.copy(isParcelSearching = false) }
         }
     }
 
@@ -194,5 +215,9 @@ class CalculatorViewModel @Inject constructor(
             .firstOrNull { weight <= it.maxWeightKg }
             ?.id
             ?: state.packageTypes.lastOrNull()?.id.orEmpty()
+    }
+
+    private companion object {
+        const val PARCEL_SEARCH_PLACEHOLDER_DELAY_MS = 600L
     }
 }
