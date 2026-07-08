@@ -1202,9 +1202,8 @@ private fun List<DeliveryPoint>.selectedPointName(selectedId: String): String {
 }
 
 private fun List<DeliveryPoint>.popularCities(selectedId: String): List<DeliveryPoint> {
-    return CalculatorScreenIds.preferredCityOrder
-        .filterNot { it == selectedId }
-        .mapNotNull { id -> firstOrNull { it.id == id } }
+    return filterNot { it.id == selectedId }
+        .take(CalculatorScreenNumbers.maxQuickCityCount)
 }
 
 private fun List<DeliveryPackageType>.selectedPackageTypeName(selectedId: String): String {
@@ -1225,10 +1224,6 @@ private fun DeliveryPackageType.getIconResOrNull(): Int? {
 }
 
 private object CalculatorScreenIds {
-    const val citySaintPetersburg = "spb"
-    const val cityNovosibirsk = "nsk"
-    const val cityTomsk = "tmk"
-    const val cityMoscow = "msk"
     const val packageEnvelope = "envelope"
     const val packageBoxXs = "box_xs"
     const val packageBoxS = "box-s"
@@ -1237,13 +1232,10 @@ private object CalculatorScreenIds {
     const val packageBag = "bag"
     const val packagePallet = "pallet"
     const val packageBoxXl = "box-xl"
+}
 
-    val preferredCityOrder = listOf(
-        citySaintPetersburg,
-        cityNovosibirsk,
-        cityTomsk,
-        cityMoscow
-    )
+private object CalculatorScreenNumbers {
+    const val maxQuickCityCount = 4
 }
 
 private object CalculatorScreenAlpha {
