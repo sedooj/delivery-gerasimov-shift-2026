@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -205,6 +206,7 @@ fun CalculatorScreen(
     if (state.isPackageSheetVisible) {
         ModalBottomSheet(
             onDismissRequest = { onIntent(CalculatorIntent.PackageSheetDismissed) },
+            modifier = Modifier.fillMaxHeight(),
             sheetState = packageSheetState,
             containerColor = SurfaceCard,
             tonalElevation = CalculatorScreenDimens.zeroElevation,
@@ -758,8 +760,15 @@ private fun PackageTypeBottomSheet(
 
         when (state.packageInputMode) {
             PackageInputMode.Approximate -> {
-                Column(verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.packagePresetGap)) {
-                    state.packageTypes.forEach { packageType ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.packagePresetGap)
+                ) {
+                    items(
+                        items = state.packageTypes,
+                        key = { packageType -> packageType.id }
+                    ) { packageType ->
                         PackagePresetCard(
                             packageType = packageType,
                             isSelected = state.selectedPackageTypeId == packageType.id,
@@ -1312,11 +1321,13 @@ private object CalculatorScreenDimens {
     val sheetHorizontalPadding = 16.dp
     val sheetVerticalPadding = 16.dp
     val sheetSectionGap = 16.dp
+    const val sheetMaxHeightFraction = 0.86f
     val segmentedControlPadding = 4.dp
     val segmentedControlGap = 4.dp
     val segmentedControlItemVerticalPadding = 12.dp
     val segmentedControlSelectedElevation = 2.dp
     val packagePresetGap = 8.dp
+    val packagePresetListMaxHeight = 392.dp
     val packageGapBetweenTitleAndSubtitle = 4.dp
     val packagePresetCornerRadius = 16.dp
     val packagePresetHorizontalPadding = 16.dp
