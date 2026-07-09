@@ -12,18 +12,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Train
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,13 +32,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryOption
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
@@ -52,10 +47,13 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.BorderHard
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Foreground
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.InkSoft
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Green_500
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Muted
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.PrimaryForeground
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Secondary
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceCard
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceMuted
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +70,7 @@ fun DeliveryMethodScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(R.drawable.arrow_back),
                             contentDescription = stringResource(R.string.delivery_method_back),
                             tint = Foreground
                         )
@@ -82,7 +80,10 @@ fun DeliveryMethodScreen(
                     NunitoText(
                         text = stringResource(R.string.delivery_method_title),
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.Bold,
+                            fontSize = DeliveryMethodTypography.screenTitleSize,
+                            letterSpacing = DeliveryMethodTypography.screenTitleLetterSpacing,
+                            lineHeight = DeliveryMethodTypography.screenTitleLineHeight,
                         )
                     )
                 },
@@ -98,7 +99,6 @@ fun DeliveryMethodScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .navigationBarsPadding()
                 .padding(horizontal = DeliveryMethodDimens.screenHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.sectionGap)
         ) {
@@ -151,9 +151,12 @@ private fun DeliveryStepIndicator(
     ) {
         NunitoText(
             text = stringResource(R.string.delivery_method_step),
-            color = Foreground,
             style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Medium,
+                color = Foreground,
+                fontSize = DeliveryMethodTypography.deliveryStepIndicatorTitleSize,
+                lineHeight = DeliveryMethodTypography.deliveryStepIndicatorTitleLineHeight,
+                letterSpacing = DeliveryMethodTypography.deliveryStepIndicatorTitleLetterSpacing,
             )
         )
         LinearProgressIndicator(
@@ -162,8 +165,8 @@ private fun DeliveryStepIndicator(
                 .fillMaxWidth()
                 .height(DeliveryMethodDimens.progressHeight)
                 .clip(RoundedCornerShape(DeliveryMethodDimens.progressCornerRadius)),
-            color = DeliveryCardBackground,
-            trackColor = SurfaceMuted,
+            color = Green_500,
+            trackColor = Muted,
             strokeCap = StrokeCap.Round
         )
     }
@@ -238,12 +241,12 @@ private fun DeliveryMethodCard(
     title: String,
     price: String,
     subtitle: String,
-    icon: ImageVector,
+    icon: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        color = SurfaceCard,
+        color = Color.Transparent,
         shape = RoundedCornerShape(DeliveryMethodDimens.cardCornerRadius),
         modifier = modifier
             .fillMaxWidth()
@@ -255,67 +258,85 @@ private fun DeliveryMethodCard(
             )
             .clip(RoundedCornerShape(DeliveryMethodDimens.cardCornerRadius))
             .clickable(onClick = onClick)
+            .padding(DeliveryMethodDimens.cardPadding)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = DeliveryMethodDimens.cardHorizontalPadding),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.cardContentGap)
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(DeliveryMethodDimens.methodIconContainerSize)
-                    .clip(CircleShape)
-                    .background(SurfaceMuted),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.cardContentGap)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Foreground,
-                    modifier = Modifier.size(DeliveryMethodDimens.methodIconSize)
-                )
-            }
-            Spacer(modifier = Modifier.width(DeliveryMethodDimens.cardContentGap))
-            Column(
-                modifier = Modifier.weight(DeliveryMethodNumbers.fullWeight),
-                verticalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.cardTextGap)
-            ) {
-                NunitoText(
-                    text = title,
-                    color = Foreground,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Black
-                    ),
-                    maxLines = DeliveryMethodNumbers.titleMaxLines
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.priceGap)
+                Box(
+                    modifier = Modifier
+                        .size(DeliveryMethodDimens.methodIconBgSize)
+                        .background(
+                            color = Secondary,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = Foreground,
+                        modifier = Modifier.size(DeliveryMethodDimens.methodIconSize)
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(DeliveryMethodNumbers.fullWeight),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    NunitoText(
+                        text = title,
+                        color = Foreground,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = Surface,
+                            lineHeight = DeliveryMethodTypography.deliveryMethodCardTitleLineHeight,
+                            letterSpacing = DeliveryMethodTypography.deliveryMethodCardTitleLetterSpacing,
+                            fontSize = DeliveryMethodTypography.deliveryMethodCardTitleSize
+                        ),
+                        maxLines = DeliveryMethodNumbers.titleMaxLines
+                    )
                     NunitoText(
                         text = price,
                         color = Foreground,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Black
-                        )
-                    )
-                    NunitoText(
-                        text = subtitle,
-                        color = InkSoft,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = Foreground,
+                            lineHeight = DeliveryMethodTypography.deliveryMethodCardPriceLineHeight,
+                            letterSpacing = DeliveryMethodTypography.deliveryMethodCardPriceLetterSpacing,
+                            fontSize = DeliveryMethodTypography.deliveryMethodCardPriceSize
                         )
                     )
                 }
+                Icon(
+                    painter = painterResource(R.drawable.chevron_right),
+                    contentDescription = null,
+                )
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = Foreground,
-                modifier = Modifier.size(DeliveryMethodDimens.arrowIconSize)
-            )
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(modifier = Modifier.width(DeliveryMethodDimens.methodIconBgSize + DeliveryMethodDimens.cardContentGap))
+                NunitoText(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        color = Surface,
+                        lineHeight = DeliveryMethodTypography.deliveryMethodCardSubtitleLineHeight,
+                        letterSpacing = DeliveryMethodTypography.deliveryMethodCardSubtitleLetterSpacing,
+                        fontSize = DeliveryMethodTypography.deliveryMethodCardSubtitleSize
+                    )
+                )
+            }
         }
+
     }
 }
 
@@ -341,14 +362,22 @@ private fun DeliveryPromoBanner(
                     text = stringResource(R.string.delivery_method_promo_title),
                     color = PrimaryForeground,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = DeliveryMethodTypography.promoBannerTitleSizeLineHeight,
+                        fontSize = DeliveryMethodTypography.promoBannerTitleSize,
+                        letterSpacing = DeliveryMethodTypography.promoBannerTitleSizeLetterSpacing,
+                        color = PrimaryForeground
                     )
                 )
                 NunitoText(
                     text = stringResource(R.string.delivery_method_promo_subtitle),
                     color = PrimaryForeground,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = DeliveryMethodTypography.promoBannerSubtitleSizeLineHeight,
+                        fontSize = DeliveryMethodTypography.promoBannerSubtitleSize,
+                        letterSpacing = DeliveryMethodTypography.promoBannerSubtitleSizeLetterSpacing,
+                        color = White
                     )
                 )
             }
@@ -386,14 +415,14 @@ private object DeliveryMethodNumbers {
     const val titleMaxLines = 2
 }
 
-private val DeliveryOption.icon: ImageVector
+private val DeliveryOption.icon: Int
     get() {
         return if (type.contains("express", ignoreCase = true) ||
             type.contains("air", ignoreCase = true)
         ) {
-            Icons.Rounded.Flight
+            R.drawable.plane
         } else {
-            Icons.Rounded.Train
+            R.drawable.truck
         }
     }
 
@@ -411,7 +440,7 @@ private fun Int.toDeliveryDaysText(): String {
 
 private object DeliveryMethodDimens {
     val screenHorizontalPadding = 16.dp
-    val sectionGap = 16.dp
+    val sectionGap = 8.dp
     val stepTopPadding = 8.dp
     val stepGap = 8.dp
     val progressHeight = 4.dp
@@ -420,12 +449,13 @@ private object DeliveryMethodDimens {
     val cardGap = 8.dp
     val cardCornerRadius = 24.dp
     val cardBorderWidth = 1.dp
-    val methodCardHeight = 96.dp
-    val cardHorizontalPadding = 16.dp
-    val cardContentGap = 14.dp
-    val cardTextGap = 4.dp
+    val methodCardHeight = 116.dp
+    val cardPadding = 16.dp
+    val cardContentGap = 8.dp
+    val cardTextGap = 8.dp
     val methodIconContainerSize = 48.dp
-    val methodIconSize = 26.dp
+    val methodIconBgSize = 48.dp
+    val methodIconSize = 24.dp
     val arrowIconSize = 28.dp
     val priceGap = 8.dp
     val stateContainerHeight = 112.dp
@@ -440,4 +470,35 @@ private object DeliveryMethodDimens {
     val bannerBoxLargeOffsetY = 12.dp
     val bannerBoxMediumOffsetX = (-54).dp
     val bannerBoxMediumOffsetY = 10.dp
+}
+
+private object DeliveryMethodTypography {
+    val screenTitleSize = 24.sp
+    val screenTitleLetterSpacing = 0.5.sp
+    val screenTitleLineHeight = 32.sp
+
+    val deliveryStepIndicatorTitleSize = 14.sp
+    val deliveryStepIndicatorTitleLineHeight = 22.sp
+    val deliveryStepIndicatorTitleLetterSpacing = 0.5.sp
+
+    val deliveryMethodCardTitleSize = 14.sp
+    val deliveryMethodCardTitleLineHeight = 22.sp
+    val deliveryMethodCardTitleLetterSpacing = 0.5.sp
+
+    val deliveryMethodCardPriceSize = 24.sp
+    val deliveryMethodCardPriceLineHeight = 32.sp
+    val deliveryMethodCardPriceLetterSpacing = 0.5.sp
+
+    val deliveryMethodCardSubtitleSize = 14.sp
+    val deliveryMethodCardSubtitleLineHeight = 22.sp
+    val deliveryMethodCardSubtitleLetterSpacing = 0.5.sp
+
+    val promoBannerTitleSize = 24.sp
+    val promoBannerTitleSizeLetterSpacing = 0.5.sp
+    val promoBannerTitleSizeLineHeight = 32.sp
+
+
+    val promoBannerSubtitleSize = 14.sp
+    val promoBannerSubtitleSizeLetterSpacing = 0.5.sp
+    val promoBannerSubtitleSizeLineHeight = 22.sp
 }
