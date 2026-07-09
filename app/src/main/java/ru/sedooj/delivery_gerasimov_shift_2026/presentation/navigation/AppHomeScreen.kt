@@ -1,28 +1,27 @@
 package ru.sedooj.delivery_gerasimov_shift_2026.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,14 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -52,9 +53,10 @@ import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.Deliv
 import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.DeliveryUiState
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.BorderHard
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Foreground
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.InkSoft
+import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Green_500
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceCard
 
 @Composable
@@ -82,20 +84,12 @@ fun AppHomeScreen() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Background,
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             if (showBottomBar) {
                 AppBottomNavigationBar(
                     items = bottomItems,
-                    currentDestination = currentDestination,
-                    onItemClick = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    currentDestination = currentDestination
                 )
             }
         }
@@ -113,10 +107,8 @@ fun AppHomeScreen() {
                 )
             }
             composable<AppRoute.History> {
-                MainTabPlaceholderScreen(title = "История")
             }
             composable<AppRoute.Profile> {
-                MainTabPlaceholderScreen(title = "Профиль")
             }
             composable<AppRoute.DeliveryMethod> {
                 DeliveryMethodScreen(
@@ -134,30 +126,43 @@ fun AppHomeScreen() {
 @Composable
 private fun AppBottomNavigationBar(
     items: List<BottomNavigationItem>,
-    currentDestination: NavDestination?,
-    onItemClick: (AppRoute) -> Unit
+    currentDestination: NavDestination?
 ) {
-    NavigationBar(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(AppNavigationDimens.bottomBarHeight),
-        containerColor = SurfaceCard,
-        tonalElevation = AppNavigationDimens.bottomBarElevation
+            .navigationBarsPadding()
+            .padding(
+                horizontal = AppNavigationDimens.bottomBarHorizontalPadding,
+                vertical = AppNavigationDimens.bottomBarVerticalPadding
+            )
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppNavigationDimens.bottomBarPadding),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEach { item ->
-                AppBottomNavigationItem(
-                    item = item,
-                    selected = currentDestination.isSelected(item.route),
-                    onClick = { onItemClick(item.route) },
-                    modifier = Modifier.weight(AppNavigationDimens.fullWeight)
+                .height(AppNavigationDimens.bottomBarHeight)
+                .clip(RoundedCornerShape(AppNavigationDimens.bottomBarCornerRadius))
+                .background(SurfaceCard)
+                .border(
+                    width = AppNavigationDimens.bottomBarBorderWidth,
+                    color = BorderHard,
+                    shape = RoundedCornerShape(AppNavigationDimens.bottomBarCornerRadius)
                 )
+                .padding(AppNavigationDimens.bottomBarInnerPadding)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(AppNavigationDimens.bottomItemSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEach { item ->
+                    AppBottomNavigationItem(
+                        item = item,
+                        selected = currentDestination.isSelected(item.route) ||
+                            (currentDestination == null && item.route == AppRoute.Calculator),
+                        modifier = Modifier.weight(AppNavigationDimens.fullWeight)
+                    )
+                }
             }
         }
     }
@@ -167,68 +172,42 @@ private fun AppBottomNavigationBar(
 private fun AppBottomNavigationItem(
     item: BottomNavigationItem,
     selected: Boolean,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val itemModifier = if (selected) {
+        modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(AppNavigationDimens.selectedItemCornerRadius))
+            .background(Green_500)
+    } else {
+        modifier
+            .fillMaxHeight()
+    }
+
     Column(
-        modifier = modifier
-            .height(AppNavigationDimens.bottomItemHeight)
-            .clip(MaterialTheme.shapes.small)
-            .clickable(onClick = onClick),
+        modifier = itemModifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
             AppNavigationDimens.bottomItemGap,
             Alignment.CenterVertically
         )
     ) {
-        Box(
-            modifier = Modifier
-                .size(AppNavigationDimens.bottomIconContainerSize)
-                .clip(CircleShape)
-                .background(if (selected) DeliveryCardBackground else Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                tint = if (selected) Foreground else InkSoft,
-                modifier = Modifier.size(AppNavigationDimens.bottomIconSize)
-            )
-        }
+        Icon(
+            painter = painterResource(item.icon),
+            contentDescription = item.label,
+            tint = if (selected) SurfaceCard else Foreground,
+            modifier = Modifier.size(AppNavigationDimens.bottomIconSize)
+        )
         NunitoText(
             text = item.label,
-            color = if (selected) Foreground else InkSoft,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            color = if (selected) SurfaceCard else Foreground,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = AppNavigationTypography.pageTitleSize,
+                lineHeight = AppNavigationTypography.pageTitleLineHeight,
+                letterSpacing = AppNavigationTypography.pageTitleLineLetterSpacing,
             )
         )
-    }
-}
-
-@Composable
-private fun MainTabPlaceholderScreen(
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = Background
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(horizontal = AppNavigationDimens.placeholderHorizontalPadding),
-            contentAlignment = Alignment.TopStart
-        ) {
-            NunitoText(
-                text = title,
-                modifier = Modifier.padding(top = AppNavigationDimens.placeholderTopPadding),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Black
-                )
-            )
-        }
     }
 }
 
@@ -243,17 +222,17 @@ private fun rememberBottomNavigationItems(): List<BottomNavigationItem> {
             BottomNavigationItem(
                 route = AppRoute.Calculator,
                 label = calculatorLabel,
-                icon = Icons.Rounded.Calculate
+                icon = R.drawable.calculator
             ),
             BottomNavigationItem(
                 route = AppRoute.History,
                 label = historyLabel,
-                icon = Icons.Rounded.History
+                icon = R.drawable.history
             ),
             BottomNavigationItem(
                 route = AppRoute.Profile,
                 label = profileLabel,
-                icon = Icons.Rounded.Person
+                icon = R.drawable.person
             )
         )
     }
@@ -273,18 +252,27 @@ private fun NavDestination?.isSelected(route: AppRoute): Boolean {
 private data class BottomNavigationItem(
     val route: AppRoute,
     val label: String,
-    val icon: ImageVector
+    val icon: Int
 )
 
 private object AppNavigationDimens {
-    val bottomBarHeight = 88.dp
-    val bottomBarPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
-    val bottomBarElevation = 0.dp
-    val bottomItemHeight = 68.dp
+    val bottomBarHeight = 72.dp
+    val bottomBarHorizontalPadding = 20.dp
+    val bottomBarVerticalPadding = 8.dp
+    val bottomBarInnerPadding = 6.dp
+    val bottomBarCornerRadius = 40.dp
+    val bottomBarBorderWidth = 1.dp
+    val selectedItemCornerRadius = 34.dp
+    val bottomItemSpacing = 4.dp
     val bottomItemGap = 2.dp
-    val bottomIconContainerSize = 40.dp
-    val bottomIconSize = 22.dp
-    val placeholderHorizontalPadding = 24.dp
-    val placeholderTopPadding = 32.dp
+    val bottomIconSize = 28.dp
+    val bottomLabelSize = 20.sp
+    val bottomLabelLineHeight = 24.sp
     const val fullWeight = 1f
+}
+
+private object AppNavigationTypography {
+    val pageTitleSize = 12.sp
+    val pageTitleLineHeight = 16.sp
+    val pageTitleLineLetterSpacing = 0.5.sp
 }

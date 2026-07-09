@@ -129,6 +129,7 @@ fun DeliveryMethodScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                     } else {
+                        Spacer(modifier = Modifier.height(DeliveryMethodDimens.cardsViewGroupTopPadding))
                         DeliveryMethodList(
                             options = deliveryUiState.theOptions,
                             modifier = Modifier.fillMaxWidth()
@@ -292,7 +293,7 @@ private fun DeliveryMethodCard(
                 ) {
                     NunitoText(
                         text = title,
-                        color = Foreground,
+                        color = Surface,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Medium,
                             color = Surface,
@@ -317,6 +318,7 @@ private fun DeliveryMethodCard(
                 Icon(
                     painter = painterResource(R.drawable.chevron_right),
                     contentDescription = null,
+                    tint = Color.Unspecified
                 )
             }
             Row(
@@ -381,29 +383,42 @@ private fun DeliveryPromoBanner(
                     )
                 )
             }
+
             Image(
-                painter = painterResource(R.drawable.box_l),
+                painter = painterResource(R.drawable.banner_box_2),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .offset(
-                        x = DeliveryMethodDimens.bannerBoxLargeOffsetX,
-                        y = DeliveryMethodDimens.bannerBoxLargeOffsetY
+                        x = DeliveryMethodDimens.bannerBoxMiddleOffsetX,
+                        y = DeliveryMethodDimens.bannerBoxMiddleOffsetY
                     )
-                    .size(DeliveryMethodDimens.bannerBoxLargeSize)
+                    .size(DeliveryMethodDimens.bannerBoxMiddleSize)
             )
             Image(
-                painter = painterResource(R.drawable.box_m),
+                painter = painterResource(R.drawable.banner_box_1),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(Alignment.BottomEnd)
                     .offset(
-                        x = DeliveryMethodDimens.bannerBoxMediumOffsetX,
-                        y = DeliveryMethodDimens.bannerBoxMediumOffsetY
+                        x = DeliveryMethodDimens.bannerBoxBackgroundOffsetX,
+                        y = DeliveryMethodDimens.bannerBoxBackgroundOffsetY
                     )
-                    .size(DeliveryMethodDimens.bannerBoxMediumSize)
+                    .size(DeliveryMethodDimens.bannerBoxBackgroundSize)
+            )
+            Image(
+                painter = painterResource(R.drawable.banner_box_3),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(
+                        x = DeliveryMethodDimens.bannerBoxFrontOffsetX,
+                        y = DeliveryMethodDimens.bannerBoxFrontOffsetY
+                    )
+                    .size(DeliveryMethodDimens.bannerBoxFrontSize)
             )
         }
     }
@@ -441,7 +456,7 @@ private fun Int.toDeliveryDaysText(): String {
 private object DeliveryMethodDimens {
     val screenHorizontalPadding = 16.dp
     val sectionGap = 8.dp
-    val stepTopPadding = 8.dp
+    val stepTopPadding = 0.dp
     val stepGap = 8.dp
     val progressHeight = 4.dp
     val progressCornerRadius = 999.dp
@@ -452,6 +467,7 @@ private object DeliveryMethodDimens {
     val methodCardHeight = 116.dp
     val cardPadding = 16.dp
     val cardContentGap = 8.dp
+    val cardsViewGroupTopPadding = 24.dp
     val cardTextGap = 8.dp
     val methodIconContainerSize = 48.dp
     val methodIconBgSize = 48.dp
@@ -464,12 +480,15 @@ private object DeliveryMethodDimens {
     val bannerHeight = 112.dp
     val bannerHorizontalPadding = 18.dp
     val bannerTextGap = 2.dp
-    val bannerBoxLargeSize = 90.dp
-    val bannerBoxMediumSize = 60.dp
-    val bannerBoxLargeOffsetX = 10.dp
-    val bannerBoxLargeOffsetY = 12.dp
-    val bannerBoxMediumOffsetX = (-54).dp
-    val bannerBoxMediumOffsetY = 10.dp
+    val bannerBoxBackgroundSize = 118.dp
+    val bannerBoxMiddleSize = 88.dp
+    val bannerBoxFrontSize = 66.dp
+    val bannerBoxBackgroundOffsetX = (0).dp
+    val bannerBoxBackgroundOffsetY = (24).dp
+    val bannerBoxMiddleOffsetX = (-34).dp
+    val bannerBoxMiddleOffsetY = (-24).dp
+    val bannerBoxFrontOffsetX = (-10).dp
+    val bannerBoxFrontOffsetY = (-34).dp
 }
 
 private object DeliveryMethodTypography {
