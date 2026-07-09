@@ -4,13 +4,17 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 import org.json.JSONArray
 import org.json.JSONObject
-import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculation
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.dto.CalculateDeliveryDto
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.dto.CalculateDeliveryResponse
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.dto.PackageDto
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.dto.PointDto
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
 
 class DeliveryRemoteDataSource @Inject constructor(
-    private val apiClient: DeliveryApiClient
+    private val apiClient: DeliveryApiClient,
+    private val apiService: DeliveryApiService
 ) {
     fun getDeliveryPoints(): List<DeliveryPoint> {
         val response = apiClient.get(DELIVERY_POINTS_PATH)
@@ -45,53 +49,25 @@ class DeliveryRemoteDataSource @Inject constructor(
         }
     }
 
-    fun calculateDelivery(request: DeliveryCalculationRequest): DeliveryCalculation {
-        val points = getDeliveryPoints()
-        val packageTypes = getDeliveryPackageTypes()
-        val senderPoint = points.firstOrNull { it.id == request.senderPointId }
-            ?: error("Sender delivery point not found: ${request.senderPointId}")
-        val receiverPoint = points.firstOrNull { it.id == request.receiverPointId }
-            ?: error("Receiver delivery point not found: ${request.receiverPointId}")
-        val packagePayload = request.resolvePackagePayload(packageTypes)
-
-        val response = apiClient.post(
-            path = DELIVERY_CALC_PATH,
-            body = JSONObject()
-                .put(KEY_PACKAGE, packagePayload)
-                .put(KEY_SENDER_POINT, senderPoint.toCalculatePointJson())
-                .put(KEY_RECEIVER_POINT, receiverPoint.toCalculatePointJson())
+    fun calculateDelivery(request: DeliveryCalculationRequest): CalculateDeliveryResponse {
+        return apiService.calculateDelivery(
+            CalculateDeliveryDto(
+                packageDto = PackageDto(
+                    length = request.length,
+                    width = request.width,
+                    weight = request.weight,
+                    height = request.height
+                ),
+                senderPoint = PointDto(
+                    latitude = request.senderLatitude,
+                    longitude = request.senderLongitude
+                ),
+                receiverPoint = PointDto(
+                    latitude = request.receiverLatitude,
+                    longitude = request.receiverLongitude
+                )
+            )
         )
-        response.requireSuccess()
-
-        val option = response.getJSONArray(KEY_OPTIONS)
-            .takeUnless { it.length() == 0 }
-            ?.getJSONObject(FIRST_INDEX)
-            ?: error("Delivery API returned no delivery options.")
-
-        return DeliveryCalculation(
-            amountRubles = (option.getDouble(KEY_PRICE) / KOPECKS_IN_RUBLE).roundToInt(),
-            currency = CURRENCY_RUB,
-            etaDays = option.getDouble(KEY_DAYS).roundToInt(),
-            routeLabel = "${senderPoint.name} - ${receiverPoint.name}",
-            deliveryTypeLabel = option.getString(KEY_NAME)
-        )
-    }
-
-    private fun DeliveryCalculationRequest.resolvePackagePayload(
-        packageTypes: List<DeliveryPackageType>
-    ): JSONObject {
-        val selectedPackage = packageTypes.firstOrNull { it.id == packageTypeId }
-        return JSONObject()
-            .put(KEY_LENGTH, lengthCm ?: selectedPackage?.lengthCm ?: error("Package length is required."))
-            .put(KEY_WIDTH, widthCm ?: selectedPackage?.widthCm ?: error("Package width is required."))
-            .put(KEY_HEIGHT, heightCm ?: selectedPackage?.heightCm ?: error("Package height is required."))
-            .put(KEY_WEIGHT, weightKg ?: selectedPackage?.weightKg ?: error("Package weight is required."))
-    }
-
-    private fun DeliveryPoint.toCalculatePointJson(): JSONObject {
-        return JSONObject()
-            .put(KEY_LATITUDE, latitude)
-            .put(KEY_LONGITUDE, longitude)
     }
 
     private fun JSONObject.requireSuccess() {
@@ -114,15 +90,10 @@ class DeliveryRemoteDataSource @Inject constructor(
     private companion object {
         const val DELIVERY_POINTS_PATH = "/api/delivery/points"
         const val DELIVERY_PACKAGE_TYPES_PATH = "/api/delivery/package/types"
-        const val DELIVERY_CALC_PATH = "/api/delivery/calc"
         const val KEY_SUCCESS = "success"
         const val KEY_REASON = "reason"
         const val KEY_POINTS = "points"
         const val KEY_PACKAGES = "packages"
-        const val KEY_PACKAGE = "package"
-        const val KEY_SENDER_POINT = "senderPoint"
-        const val KEY_RECEIVER_POINT = "receiverPoint"
-        const val KEY_OPTIONS = "options"
         const val KEY_ID = "id"
         const val KEY_NAME = "name"
         const val KEY_LATITUDE = "latitude"
@@ -131,11 +102,6 @@ class DeliveryRemoteDataSource @Inject constructor(
         const val KEY_WIDTH = "width"
         const val KEY_HEIGHT = "height"
         const val KEY_WEIGHT = "weight"
-        const val KEY_PRICE = "price"
-        const val KEY_DAYS = "days"
-        const val FIRST_INDEX = 0
-        const val KOPECKS_IN_RUBLE = 100.0
         const val WHOLE_NUMBER_DIVISOR = 1.0
-        const val CURRENCY_RUB = "RUB"
     }
 }

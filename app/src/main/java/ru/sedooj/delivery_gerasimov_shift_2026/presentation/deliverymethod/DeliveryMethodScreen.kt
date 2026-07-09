@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Flight
 import androidx.compose.material.icons.rounded.Train
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +38,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.sedooj.delivery_gerasimov_shift_2026.R
+import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryOption
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.BorderHard
@@ -59,6 +60,7 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceMuted
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeliveryMethodScreen(
+    deliveryUiState: DeliveryUiState,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -101,8 +103,40 @@ fun DeliveryMethodScreen(
             verticalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.sectionGap)
         ) {
             DeliveryStepIndicator(modifier = Modifier.fillMaxWidth())
-            DeliveryMethodList(modifier = Modifier.fillMaxWidth())
-            DeliveryPromoBanner(modifier = Modifier.fillMaxWidth())
+            when (deliveryUiState) {
+                DeliveryUiState.Idle -> {
+                    DeliveryMethodMessage(
+                        text = stringResource(R.string.delivery_method_idle),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                DeliveryUiState.Loading -> {
+                    DeliveryMethodLoading(modifier = Modifier.fillMaxWidth())
+                }
+
+                is DeliveryUiState.Error -> {
+                    DeliveryMethodMessage(
+                        text = deliveryUiState.message,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                is DeliveryUiState.Success -> {
+                    if (deliveryUiState.theOptions.isEmpty()) {
+                        DeliveryMethodMessage(
+                            text = stringResource(R.string.delivery_method_empty_options),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        DeliveryMethodList(
+                            options = deliveryUiState.theOptions,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        DeliveryPromoBanner(modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
         }
     }
 }
@@ -137,25 +171,64 @@ private fun DeliveryStepIndicator(
 
 @Composable
 private fun DeliveryMethodList(
+    options: List<DeliveryOption>,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(DeliveryMethodDimens.cardGap)
     ) {
-        DeliveryMethodCard(
-            title = stringResource(R.string.delivery_method_express_title),
-            price = stringResource(R.string.delivery_method_express_price),
-            subtitle = stringResource(R.string.delivery_method_express_subtitle),
-            icon = Icons.Rounded.Flight,
-            onClick = {}
+        options.forEach { option ->
+            DeliveryMethodCard(
+                title = option.name,
+                price = stringResource(R.string.delivery_method_price_format, option.price),
+                subtitle = option.days.toDeliveryDaysText(),
+                icon = option.icon,
+                onClick = {}
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeliveryMethodLoading(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.height(DeliveryMethodDimens.stateContainerHeight),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = Foreground,
+            strokeWidth = DeliveryMethodDimens.loaderStrokeWidth
         )
-        DeliveryMethodCard(
-            title = stringResource(R.string.delivery_method_regular_title),
-            price = stringResource(R.string.delivery_method_regular_price),
-            subtitle = stringResource(R.string.delivery_method_regular_subtitle),
-            icon = Icons.Rounded.Train,
-            onClick = {}
+    }
+}
+
+@Composable
+private fun DeliveryMethodMessage(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(DeliveryMethodDimens.stateContainerHeight)
+            .clip(RoundedCornerShape(DeliveryMethodDimens.cardCornerRadius))
+            .background(SurfaceCard)
+            .border(
+                width = DeliveryMethodDimens.cardBorderWidth,
+                color = BorderHard,
+                shape = RoundedCornerShape(DeliveryMethodDimens.cardCornerRadius)
+            )
+            .padding(DeliveryMethodDimens.stateMessagePadding),
+        contentAlignment = Alignment.Center
+    ) {
+        NunitoText(
+            text = text,
+            color = Foreground,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
         )
     }
 }
@@ -313,6 +386,29 @@ private object DeliveryMethodNumbers {
     const val titleMaxLines = 2
 }
 
+private val DeliveryOption.icon: ImageVector
+    get() {
+        return if (type.contains("express", ignoreCase = true) ||
+            type.contains("air", ignoreCase = true)
+        ) {
+            Icons.Rounded.Flight
+        } else {
+            Icons.Rounded.Train
+        }
+    }
+
+private fun Int.toDeliveryDaysText(): String {
+    val mod100 = this % 100
+    val mod10 = this % 10
+    val suffix = when {
+        mod100 in 11..14 -> "рабочих дней"
+        mod10 == 1 -> "рабочий день"
+        mod10 in 2..4 -> "рабочих дня"
+        else -> "рабочих дней"
+    }
+    return "$this $suffix"
+}
+
 private object DeliveryMethodDimens {
     val screenHorizontalPadding = 16.dp
     val sectionGap = 16.dp
@@ -320,6 +416,7 @@ private object DeliveryMethodDimens {
     val stepGap = 8.dp
     val progressHeight = 4.dp
     val progressCornerRadius = 999.dp
+    val loaderStrokeWidth = 2.dp
     val cardGap = 8.dp
     val cardCornerRadius = 24.dp
     val cardBorderWidth = 1.dp
@@ -331,6 +428,8 @@ private object DeliveryMethodDimens {
     val methodIconSize = 26.dp
     val arrowIconSize = 28.dp
     val priceGap = 8.dp
+    val stateContainerHeight = 112.dp
+    val stateMessagePadding = 20.dp
     val bannerCornerRadius = 24.dp
     val bannerHeight = 112.dp
     val bannerHorizontalPadding = 18.dp

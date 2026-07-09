@@ -66,10 +66,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.serialization.builtins.ArraySerializer
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
+import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.DeliveryUiState
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.BorderHard
@@ -87,10 +87,11 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface as FieldStroke
 
 @Composable
 fun CalculatorRoute(
-    onCalculateClick: () -> Unit,
-    viewModel: CalculatorViewModel = hiltViewModel()
+    viewModel: CalculatorViewModel = hiltViewModel(),
+    onCalculateClick: () -> Unit = viewModel::calculateDelivery
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val deliveryUiState by viewModel.deliveryUiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.effects) {
@@ -107,7 +108,8 @@ fun CalculatorRoute(
         state = state,
         snackbarHostState = snackbarHostState,
         onIntent = viewModel::onIntent,
-        onCalculateClick = onCalculateClick
+        onCalculateClick = onCalculateClick,
+        isDeliveryCalculationLoading = deliveryUiState is DeliveryUiState.Loading
     )
 }
 
@@ -118,6 +120,7 @@ fun CalculatorScreen(
     snackbarHostState: SnackbarHostState,
     onIntent: (CalculatorIntent) -> Unit,
     onCalculateClick: () -> Unit,
+    isDeliveryCalculationLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     val packageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -182,6 +185,7 @@ fun CalculatorScreen(
                                 state = state,
                                 onIntent = onIntent,
                                 onCalculateClick = onCalculateClick,
+                                isDeliveryCalculationLoading = isDeliveryCalculationLoading,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -217,6 +221,7 @@ private fun HeroLayout(
     state: CalculatorUiState,
     onIntent: (CalculatorIntent) -> Unit,
     onCalculateClick: () -> Unit,
+    isDeliveryCalculationLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -230,7 +235,8 @@ private fun HeroLayout(
                 CalculatorCard(
                     state = state,
                     onIntent = onIntent,
-                    onCalculateClick = onCalculateClick
+                    onCalculateClick = onCalculateClick,
+                    isDeliveryCalculationLoading = isDeliveryCalculationLoading
                 )
                 ParcelTrackerCard(
                     modifier = Modifier
@@ -257,7 +263,8 @@ private fun HeroLayout(
                     CalculatorCard(
                         state = state,
                         onIntent = onIntent,
-                        onCalculateClick = onCalculateClick
+                        onCalculateClick = onCalculateClick,
+                        isDeliveryCalculationLoading = isDeliveryCalculationLoading
                     )
                 }
                 Box(modifier = Modifier.weight(CalculatorScreenDimens.heroSecondaryWeight)) {
@@ -286,6 +293,7 @@ private fun CalculatorCard(
     state: CalculatorUiState,
     onIntent: (CalculatorIntent) -> Unit,
     onCalculateClick: () -> Unit,
+    isDeliveryCalculationLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -345,27 +353,35 @@ private fun CalculatorCard(
             ) {
                 TextButton(
                     onClick = onCalculateClick,
-                    enabled = state.canCalculate,
+                    enabled = state.canCalculate && !isDeliveryCalculationLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(CalculatorScreenDimens.primaryActionHeight)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        NunitoText(
-                            text = stringResource(R.string.calculator_action_calculate),
-                            color = PrimaryForeground,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
-                                lineHeight = CalculatorScreenTypography.buttonLineHeight
+                    if (isDeliveryCalculationLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(CalculatorScreenDimens.buttonLoaderSize),
+                            color = SurfaceCard,
+                            strokeWidth = CalculatorScreenDimens.loaderStrokeWidth
+                        )
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            NunitoText(
+                                text = stringResource(R.string.calculator_action_calculate),
+                                color = PrimaryForeground,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
+                                    lineHeight = CalculatorScreenTypography.buttonLineHeight
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.width(CalculatorScreenDimens.inlineIconGap))
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_right),
-                            contentDescription = null,
-                            tint = PrimaryForeground
-                        )
+                            Spacer(modifier = Modifier.width(CalculatorScreenDimens.inlineIconGap))
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_right),
+                                contentDescription = null,
+                                tint = PrimaryForeground
+                            )
+                        }
                     }
                 }
             }

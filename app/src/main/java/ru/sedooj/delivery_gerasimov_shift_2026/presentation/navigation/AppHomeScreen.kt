@@ -24,6 +24,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -42,9 +43,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator.CalculatorRoute
+import ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator.CalculatorViewModel
 import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.DeliveryMethodScreen
+import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.DeliveryUiState
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.components.NunitoText
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Background
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
@@ -55,11 +60,24 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.SurfaceCard
 @Composable
 fun AppHomeScreen() {
     val navController = rememberNavController()
+    val calculatorViewModel: CalculatorViewModel = hiltViewModel()
+    val deliveryUiState by calculatorViewModel.deliveryUiState.collectAsStateWithLifecycle()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val bottomItems = rememberBottomNavigationItems()
     val showBottomBar = currentDestination == null ||
         bottomItems.any { currentDestination.isSelected(it.route) }
+
+    LaunchedEffect(deliveryUiState, currentDestination) {
+        if (
+            deliveryUiState is DeliveryUiState.Success &&
+            !currentDestination.isSelected(AppRoute.DeliveryMethod)
+        ) {
+            navController.navigate(AppRoute.DeliveryMethod) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -91,9 +109,7 @@ fun AppHomeScreen() {
         ) {
             composable<AppRoute.Calculator> {
                 CalculatorRoute(
-                    onCalculateClick = {
-                        navController.navigate(AppRoute.DeliveryMethod)
-                    }
+                    viewModel = calculatorViewModel
                 )
             }
             composable<AppRoute.History> {
@@ -104,8 +120,10 @@ fun AppHomeScreen() {
             }
             composable<AppRoute.DeliveryMethod> {
                 DeliveryMethodScreen(
+                    deliveryUiState = deliveryUiState,
                     onBackClick = {
                         navController.popBackStack()
+                        calculatorViewModel.resetDeliveryCalculation()
                     }
                 )
             }
