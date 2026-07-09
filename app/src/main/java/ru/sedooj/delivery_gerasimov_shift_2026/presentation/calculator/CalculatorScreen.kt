@@ -1207,7 +1207,7 @@ private object CalculatorScreenColors {
 private object CalculatorScreenDimens {
     val screenHorizontalPadding = 16.dp
     val screenTopPadding = 16.dp
-    val screenBottomPadding = 98.dp
+    val screenBottomPadding = 16.dp
     val rootContentSpacing = 8.dp
     val heroContentSpacing = 8.dp
     val primaryCardCornerRadius = 24.dp
