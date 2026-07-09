@@ -14,16 +14,8 @@ enum class PackageInputMode {
     Exact
 }
 
-data class CalculatorQuoteUi(
-    val amountRubles: Int,
-    val etaDays: Int,
-    val routeLabel: String,
-    val deliveryTypeLabel: String
-)
-
 data class CalculatorUiState(
     val isLoading: Boolean = true,
-    val isCalculating: Boolean = false,
     val deliveryPoints: List<DeliveryPoint> = emptyList(),
     val packageTypes: List<DeliveryPackageType> = emptyList(),
     val selectedSenderPointId: String = "",
@@ -38,7 +30,6 @@ data class CalculatorUiState(
     val widthInput: String = "",
     val heightInput: String = "",
     val weightInput: String = "",
-    val quote: CalculatorQuoteUi? = null,
     @param:StringRes val errorMessageRes: Int? = null
 ) {
     val hasExactDimensions: Boolean

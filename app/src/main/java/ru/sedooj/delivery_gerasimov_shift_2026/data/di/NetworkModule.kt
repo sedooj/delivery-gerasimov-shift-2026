@@ -7,6 +7,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import ru.sedooj.delivery_gerasimov_shift_2026.BuildConfig
 import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.DeliveryApiClient
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.DeliveryApiService
+import ru.sedooj.delivery_gerasimov_shift_2026.data.remote.HttpDeliveryApiService
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,4 +24,10 @@ object NetworkModule {
 
         return DeliveryApiClient(baseUrl = endpoint)
     }
+
+    @Provides
+    @Singleton
+    fun provideDeliveryApiService(
+        apiClient: DeliveryApiClient
+    ): DeliveryApiService = HttpDeliveryApiService(apiClient)
 }

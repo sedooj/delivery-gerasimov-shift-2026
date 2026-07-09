@@ -22,15 +22,20 @@
     <string name="calculator_dimension_kilograms_placeholder">КГ</string>
     <string name="calculator_banner_title">Бесплатная доставка</string>
     <string name="calculator_banner_subtitle">за приведенного друга</string>
-    <string name="calculator_quote_title">Ваш заказ</string>
-    <string name="calculator_quote_route_label">Маршрут</string>
-    <string name="calculator_quote_eta_label">Срок</string>
-    <string name="calculator_quote_total_label">Итого</string>
     <string name="calculator_package_not_selected">Не выбран</string>
     <string name="calculator_package_exact_format">%1$sx%2$sx%3$s см, %4$s кг</string>
-    <string name="calculator_quote_amount_format">%1$d ₽</string>
-    <string name="calculator_quote_eta_format">%1$d дн.</string>
     <string name="calculator_error_load">Не удалось загрузить данные для расчёта</string>
     <string name="calculator_error_fill_required">Заполните обязательные поля перед расчётом</string>
     <string name="calculator_error_calculation">Не удалось рассчитать доставку</string>
+    <string name="navigation_calculator">Расчёт</string>
+    <string name="navigation_history">История</string>
+    <string name="navigation_profile">Профиль</string>
+    <string name="delivery_method_title">Способ отправки</string>
+    <string name="delivery_method_back">Назад</string>
+    <string name="delivery_method_step">Шаг 1 из 7</string>
+    <string name="delivery_method_price_format">%1$d ₽</string>
+    <string name="delivery_method_promo_title">1+1=3</string>
+    <string name="delivery_method_promo_subtitle">3-я доставка в подарок!</string>
+    <string name="delivery_method_idle">Сначала рассчитайте доставку</string>
+    <string name="delivery_method_empty_options">API не вернул способы доставки</string>
 </resources>

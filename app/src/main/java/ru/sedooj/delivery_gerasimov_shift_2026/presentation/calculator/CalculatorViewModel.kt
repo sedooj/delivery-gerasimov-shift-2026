@@ -17,9 +17,11 @@ import kotlinx.coroutines.launch
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
+import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.CalculateDeliveryUseCase
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPackageTypesUseCase
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPointsUseCase
+import ru.sedooj.delivery_gerasimov_shift_2026.presentation.deliverymethod.DeliveryUiState
 
 @HiltViewModel
 class CalculatorViewModel @Inject constructor(
@@ -31,6 +33,9 @@ class CalculatorViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(CalculatorUiState())
     val uiState: StateFlow<CalculatorUiState> = _uiState.asStateFlow()
+
+    private val _deliveryUiState = MutableStateFlow<DeliveryUiState>(DeliveryUiState.Idle)
+    val deliveryUiState: StateFlow<DeliveryUiState> = _deliveryUiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<CalculatorEffect>()
     val effects: SharedFlow<CalculatorEffect> = _effects.asSharedFlow()
@@ -50,21 +55,21 @@ class CalculatorViewModel @Inject constructor(
             }
 
             is CalculatorIntent.SenderPointChanged -> {
+                resetDeliveryState()
                 _uiState.update {
                     it.copy(
                         selectedSenderPointId = intent.pointId,
-                        cityPickerTarget = null,
-                        quote = null
+                        cityPickerTarget = null
                     )
                 }
             }
 
             is CalculatorIntent.ReceiverPointChanged -> {
+                resetDeliveryState()
                 _uiState.update {
                     it.copy(
                         selectedReceiverPointId = intent.pointId,
-                        cityPickerTarget = null,
-                        quote = null
+                        cityPickerTarget = null
                     )
                 }
             }
@@ -78,37 +83,69 @@ class CalculatorViewModel @Inject constructor(
             }
 
             is CalculatorIntent.PackageInputModeChanged -> {
+                resetDeliveryState()
                 _uiState.update {
                     it.copy(
-                        packageInputMode = intent.mode,
-                        quote = null
+                        packageInputMode = intent.mode
                     )
                 }
             }
 
             is CalculatorIntent.PackageTypeChanged -> {
+                resetDeliveryState()
                 _uiState.update {
                     it.copy(
                         selectedPackageTypeId = intent.packageTypeId,
                         packageInputMode = PackageInputMode.Approximate,
-                        isPackageSheetVisible = false,
-                        quote = null
+                        isPackageSheetVisible = false
                     )
                 }
             }
 
-            is CalculatorIntent.LengthChanged -> updateDimension { copy(lengthInput = intent.value, quote = null) }
-            is CalculatorIntent.WidthChanged -> updateDimension { copy(widthInput = intent.value, quote = null) }
-            is CalculatorIntent.HeightChanged -> updateDimension { copy(heightInput = intent.value, quote = null) }
-            is CalculatorIntent.WeightChanged -> updateDimension { copy(weightInput = intent.value, quote = null) }
+            is CalculatorIntent.LengthChanged -> updateDimension { copy(lengthInput = intent.value) }
+            is CalculatorIntent.WidthChanged -> updateDimension { copy(widthInput = intent.value) }
+            is CalculatorIntent.HeightChanged -> updateDimension { copy(heightInput = intent.value) }
+            is CalculatorIntent.WeightChanged -> updateDimension { copy(weightInput = intent.value) }
             is CalculatorIntent.TrackingNumberChanged -> {
                 _uiState.update { it.copy(trackingNumber = intent.value) }
             }
 
             CalculatorIntent.ParcelSearchClicked -> searchParcel()
-            CalculatorIntent.CalculateClicked -> calculate()
             CalculatorIntent.ErrorDismissed -> _uiState.update { it.copy(errorMessageRes = null) }
         }
+    }
+
+    fun calculateDelivery() {
+        val request = runCatching {
+            _uiState.value.toDeliveryCalculationRequest()
+        }.getOrElse { throwable ->
+            val message = throwable.message.orEmpty()
+                .ifBlank { context.getString(R.string.calculator_error_fill_required) }
+            _deliveryUiState.value = DeliveryUiState.Error(message)
+            viewModelScope.launch {
+                _effects.emit(CalculatorEffect.ShowMessage(message))
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _deliveryUiState.value = DeliveryUiState.Loading
+
+            runCatching {
+                calculateDeliveryUseCase(request)
+            }.onSuccess { options ->
+                _deliveryUiState.value = DeliveryUiState.Success(options)
+            }.onFailure { throwable ->
+                val message = throwable.message.orEmpty()
+                    .ifBlank { context.getString(R.string.calculator_error_calculation) }
+                _deliveryUiState.value = DeliveryUiState.Error(message)
+                _effects.emit(CalculatorEffect.ShowMessage(message))
+            }
+        }
+    }
+
+    fun resetDeliveryCalculation() {
+        _deliveryUiState.value = DeliveryUiState.Idle
     }
 
     private fun loadInitialData() {
@@ -136,53 +173,6 @@ class CalculatorViewModel @Inject constructor(
         }
     }
 
-    private fun calculate() {
-        val currentState = _uiState.value
-        if (!currentState.canCalculate) {
-            viewModelScope.launch {
-                val messageRes = R.string.calculator_error_fill_required
-                _uiState.update { it.copy(errorMessageRes = messageRes) }
-                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
-            }
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isCalculating = true, errorMessageRes = null) }
-
-            runCatching {
-                val selectedPackageTypeId = resolvePackageTypeId(currentState)
-                calculateDeliveryUseCase(
-                    request = DeliveryCalculationRequest(
-                        senderPointId = currentState.selectedSenderPointId,
-                        receiverPointId = currentState.selectedReceiverPointId,
-                        packageTypeId = selectedPackageTypeId,
-                        lengthCm = currentState.lengthInput.toDoubleOrNull(),
-                        widthCm = currentState.widthInput.toDoubleOrNull(),
-                        heightCm = currentState.heightInput.toDoubleOrNull(),
-                        weightKg = currentState.weightInput.toDoubleOrNull()
-                    )
-                )
-            }.onSuccess { calculation ->
-                _uiState.update {
-                    it.copy(
-                        isCalculating = false,
-                        quote = CalculatorQuoteUi(
-                            amountRubles = calculation.amountRubles,
-                            etaDays = calculation.etaDays,
-                            routeLabel = calculation.routeLabel,
-                            deliveryTypeLabel = calculation.deliveryTypeLabel
-                        )
-                    )
-                }
-            }.onFailure { throwable ->
-                val messageRes = R.string.calculator_error_calculation
-                _uiState.update { it.copy(isCalculating = false, errorMessageRes = messageRes) }
-                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
-            }
-        }
-    }
-
     private fun searchParcel() {
         val currentState = _uiState.value
         if (!currentState.canSearchParcel) return
@@ -195,6 +185,7 @@ class CalculatorViewModel @Inject constructor(
     }
 
     private fun updateDimension(update: CalculatorUiState.() -> CalculatorUiState) {
+        resetDeliveryState()
         _uiState.update { state ->
             state.update().copy(
                 packageInputMode = PackageInputMode.Exact
@@ -202,14 +193,73 @@ class CalculatorViewModel @Inject constructor(
         }
     }
 
-    private fun resolvePackageTypeId(state: CalculatorUiState): String {
-        return when (state.packageInputMode) {
-            PackageInputMode.Approximate -> state.selectedPackageTypeId
-            PackageInputMode.Exact -> state.selectedPackageTypeId
+    private fun CalculatorUiState.toDeliveryCalculationRequest(): DeliveryCalculationRequest {
+        if (!canCalculate) {
+            error(context.getString(R.string.calculator_error_fill_required))
+        }
+
+        val packageSize = resolvePackageSize()
+        val senderPoint = deliveryPoints.firstOrNull { it.id == selectedSenderPointId }
+        val receiverPoint = deliveryPoints.firstOrNull { it.id == selectedReceiverPointId }
+
+        return DeliveryCalculationRequest(
+            length = packageSize.length,
+            width = packageSize.width,
+            weight = packageSize.weight,
+            height = packageSize.height,
+            senderLatitude = senderPoint?.latitude ?: DEFAULT_LATITUDE,
+            senderLongitude = senderPoint?.longitude ?: DEFAULT_LONGITUDE,
+            receiverLatitude = receiverPoint?.latitude ?: DEFAULT_LATITUDE,
+            receiverLongitude = receiverPoint?.longitude ?: DEFAULT_LONGITUDE
+        )
+    }
+
+    private fun CalculatorUiState.resolvePackageSize(): PackageSize {
+        return when (packageInputMode) {
+            PackageInputMode.Approximate -> {
+                packageTypes.firstOrNull { it.id == selectedPackageTypeId }
+                    ?.toPackageSize()
+                    ?: error(context.getString(R.string.calculator_error_fill_required))
+            }
+
+            PackageInputMode.Exact -> {
+                PackageSize(
+                    length = lengthInput.toDoubleOrNull()
+                        ?: error(context.getString(R.string.calculator_error_fill_required)),
+                    width = widthInput.toDoubleOrNull()
+                        ?: error(context.getString(R.string.calculator_error_fill_required)),
+                    height = heightInput.toDoubleOrNull()
+                        ?: error(context.getString(R.string.calculator_error_fill_required)),
+                    weight = weightInput.toDoubleOrNull()
+                        ?: error(context.getString(R.string.calculator_error_fill_required))
+                )
+            }
         }
     }
 
+    private fun DeliveryPackageType.toPackageSize(): PackageSize {
+        return PackageSize(
+            length = lengthCm,
+            width = widthCm,
+            height = heightCm,
+            weight = weightKg
+        )
+    }
+
+    private fun resetDeliveryState() {
+        _deliveryUiState.value = DeliveryUiState.Idle
+    }
+
+    private data class PackageSize(
+        val length: Double,
+        val width: Double,
+        val height: Double,
+        val weight: Double
+    )
+
     private companion object {
         const val PARCEL_SEARCH_PLACEHOLDER_DELAY_MS = 600L
+        const val DEFAULT_LATITUDE = 56.8389
+        const val DEFAULT_LONGITUDE = 60.6057
     }
 }

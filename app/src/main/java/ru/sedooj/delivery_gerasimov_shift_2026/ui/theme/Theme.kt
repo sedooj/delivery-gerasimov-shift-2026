@@ -14,7 +14,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Ink,
     surface = SurfaceCard,
     onSurface = Ink,
-    surfaceVariant = SurfaceMuted,
+    surfaceVariant = Muted,
     outline = DividerWarm
 )
 
