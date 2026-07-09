@@ -15,6 +15,5 @@ sealed interface CalculatorIntent {
     data class WeightChanged(val value: String) : CalculatorIntent
     data class TrackingNumberChanged(val value: String) : CalculatorIntent
     data object ParcelSearchClicked : CalculatorIntent
-    data object CalculateClicked : CalculatorIntent
     data object ErrorDismissed : CalculatorIntent
 }

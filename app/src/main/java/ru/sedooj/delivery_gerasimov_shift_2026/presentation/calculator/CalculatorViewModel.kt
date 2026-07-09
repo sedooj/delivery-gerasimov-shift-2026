@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ru.sedooj.delivery_gerasimov_shift_2026.R
-import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryCalculationRequest
-import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.CalculateDeliveryUseCase
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPackageTypesUseCase
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPointsUseCase
 
@@ -25,8 +23,7 @@ import ru.sedooj.delivery_gerasimov_shift_2026.domain.usecase.GetDeliveryPointsU
 class CalculatorViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val getDeliveryPointsUseCase: GetDeliveryPointsUseCase,
-    private val getDeliveryPackageTypesUseCase: GetDeliveryPackageTypesUseCase,
-    private val calculateDeliveryUseCase: CalculateDeliveryUseCase
+    private val getDeliveryPackageTypesUseCase: GetDeliveryPackageTypesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CalculatorUiState())
@@ -53,8 +50,7 @@ class CalculatorViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         selectedSenderPointId = intent.pointId,
-                        cityPickerTarget = null,
-                        quote = null
+                        cityPickerTarget = null
                     )
                 }
             }
@@ -63,8 +59,7 @@ class CalculatorViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         selectedReceiverPointId = intent.pointId,
-                        cityPickerTarget = null,
-                        quote = null
+                        cityPickerTarget = null
                     )
                 }
             }
@@ -80,8 +75,7 @@ class CalculatorViewModel @Inject constructor(
             is CalculatorIntent.PackageInputModeChanged -> {
                 _uiState.update {
                     it.copy(
-                        packageInputMode = intent.mode,
-                        quote = null
+                        packageInputMode = intent.mode
                     )
                 }
             }
@@ -91,22 +85,20 @@ class CalculatorViewModel @Inject constructor(
                     it.copy(
                         selectedPackageTypeId = intent.packageTypeId,
                         packageInputMode = PackageInputMode.Approximate,
-                        isPackageSheetVisible = false,
-                        quote = null
+                        isPackageSheetVisible = false
                     )
                 }
             }
 
-            is CalculatorIntent.LengthChanged -> updateDimension { copy(lengthInput = intent.value, quote = null) }
-            is CalculatorIntent.WidthChanged -> updateDimension { copy(widthInput = intent.value, quote = null) }
-            is CalculatorIntent.HeightChanged -> updateDimension { copy(heightInput = intent.value, quote = null) }
-            is CalculatorIntent.WeightChanged -> updateDimension { copy(weightInput = intent.value, quote = null) }
+            is CalculatorIntent.LengthChanged -> updateDimension { copy(lengthInput = intent.value) }
+            is CalculatorIntent.WidthChanged -> updateDimension { copy(widthInput = intent.value) }
+            is CalculatorIntent.HeightChanged -> updateDimension { copy(heightInput = intent.value) }
+            is CalculatorIntent.WeightChanged -> updateDimension { copy(weightInput = intent.value) }
             is CalculatorIntent.TrackingNumberChanged -> {
                 _uiState.update { it.copy(trackingNumber = intent.value) }
             }
 
             CalculatorIntent.ParcelSearchClicked -> searchParcel()
-            CalculatorIntent.CalculateClicked -> calculate()
             CalculatorIntent.ErrorDismissed -> _uiState.update { it.copy(errorMessageRes = null) }
         }
     }
@@ -136,53 +128,6 @@ class CalculatorViewModel @Inject constructor(
         }
     }
 
-    private fun calculate() {
-        val currentState = _uiState.value
-        if (!currentState.canCalculate) {
-            viewModelScope.launch {
-                val messageRes = R.string.calculator_error_fill_required
-                _uiState.update { it.copy(errorMessageRes = messageRes) }
-                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
-            }
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isCalculating = true, errorMessageRes = null) }
-
-            runCatching {
-                val selectedPackageTypeId = resolvePackageTypeId(currentState)
-                calculateDeliveryUseCase(
-                    request = DeliveryCalculationRequest(
-                        senderPointId = currentState.selectedSenderPointId,
-                        receiverPointId = currentState.selectedReceiverPointId,
-                        packageTypeId = selectedPackageTypeId,
-                        lengthCm = currentState.lengthInput.toDoubleOrNull(),
-                        widthCm = currentState.widthInput.toDoubleOrNull(),
-                        heightCm = currentState.heightInput.toDoubleOrNull(),
-                        weightKg = currentState.weightInput.toDoubleOrNull()
-                    )
-                )
-            }.onSuccess { calculation ->
-                _uiState.update {
-                    it.copy(
-                        isCalculating = false,
-                        quote = CalculatorQuoteUi(
-                            amountRubles = calculation.amountRubles,
-                            etaDays = calculation.etaDays,
-                            routeLabel = calculation.routeLabel,
-                            deliveryTypeLabel = calculation.deliveryTypeLabel
-                        )
-                    )
-                }
-            }.onFailure { throwable ->
-                val messageRes = R.string.calculator_error_calculation
-                _uiState.update { it.copy(isCalculating = false, errorMessageRes = messageRes) }
-                _effects.emit(CalculatorEffect.ShowMessage(context.getString(messageRes)))
-            }
-        }
-    }
-
     private fun searchParcel() {
         val currentState = _uiState.value
         if (!currentState.canSearchParcel) return
@@ -199,13 +144,6 @@ class CalculatorViewModel @Inject constructor(
             state.update().copy(
                 packageInputMode = PackageInputMode.Exact
             )
-        }
-    }
-
-    private fun resolvePackageTypeId(state: CalculatorUiState): String {
-        return when (state.packageInputMode) {
-            PackageInputMode.Approximate -> state.selectedPackageTypeId
-            PackageInputMode.Exact -> state.selectedPackageTypeId
         }
     }
 

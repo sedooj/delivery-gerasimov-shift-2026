@@ -2,7 +2,6 @@ package ru.sedooj.delivery_gerasimov_shift_2026.presentation.calculator
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -62,13 +60,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.serialization.builtins.ArraySerializer
 import ru.sedooj.delivery_gerasimov_shift_2026.R
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPackageType
 import ru.sedooj.delivery_gerasimov_shift_2026.domain.model.DeliveryPoint
@@ -79,7 +77,6 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Canvas
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.DeliveryCardBackground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Foreground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Ink
-import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.InkSoft
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Input
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.PrimaryForeground
 import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Secondary
@@ -90,6 +87,7 @@ import ru.sedooj.delivery_gerasimov_shift_2026.ui.theme.Surface as FieldStroke
 
 @Composable
 fun CalculatorRoute(
+    onCalculateClick: () -> Unit,
     viewModel: CalculatorViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,7 +106,8 @@ fun CalculatorRoute(
     CalculatorScreen(
         state = state,
         snackbarHostState = snackbarHostState,
-        onIntent = viewModel::onIntent
+        onIntent = viewModel::onIntent,
+        onCalculateClick = onCalculateClick
     )
 }
 
@@ -118,6 +117,7 @@ fun CalculatorScreen(
     state: CalculatorUiState,
     snackbarHostState: SnackbarHostState,
     onIntent: (CalculatorIntent) -> Unit,
+    onCalculateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val packageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -181,21 +181,12 @@ fun CalculatorScreen(
                             HeroLayout(
                                 state = state,
                                 onIntent = onIntent,
+                                onCalculateClick = onCalculateClick,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                         item {
                             IllustrationCard(modifier = Modifier.fillMaxWidth())
-                        }
-                        item {
-                            AnimatedVisibility(visible = state.quote != null) {
-                                state.quote?.let { quote ->
-                                    QuoteCard(
-                                        quote = quote,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -225,6 +216,7 @@ fun CalculatorScreen(
 private fun HeroLayout(
     state: CalculatorUiState,
     onIntent: (CalculatorIntent) -> Unit,
+    onCalculateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -235,7 +227,11 @@ private fun HeroLayout(
                     CalculatorScreenDimens.heroContentSpacing
                 )
             ) {
-                CalculatorCard(state = state, onIntent = onIntent)
+                CalculatorCard(
+                    state = state,
+                    onIntent = onIntent,
+                    onCalculateClick = onCalculateClick
+                )
                 ParcelTrackerCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -258,7 +254,11 @@ private fun HeroLayout(
                 )
             ) {
                 Box(modifier = Modifier.weight(CalculatorScreenDimens.heroPrimaryWeight)) {
-                    CalculatorCard(state = state, onIntent = onIntent)
+                    CalculatorCard(
+                        state = state,
+                        onIntent = onIntent,
+                        onCalculateClick = onCalculateClick
+                    )
                 }
                 Box(modifier = Modifier.weight(CalculatorScreenDimens.heroSecondaryWeight)) {
                     ParcelTrackerCard(
@@ -285,6 +285,7 @@ private fun HeroLayout(
 private fun CalculatorCard(
     state: CalculatorUiState,
     onIntent: (CalculatorIntent) -> Unit,
+    onCalculateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -343,36 +344,28 @@ private fun CalculatorCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TextButton(
-                    onClick = { onIntent(CalculatorIntent.CalculateClicked) },
-                    enabled = state.canCalculate && !state.isCalculating,
+                    onClick = onCalculateClick,
+                    enabled = state.canCalculate,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(CalculatorScreenDimens.primaryActionHeight)
                 ) {
-                    if (state.isCalculating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(CalculatorScreenDimens.buttonLoaderSize),
-                            color = SurfaceCard,
-                            strokeWidth = CalculatorScreenDimens.loaderStrokeWidth
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        NunitoText(
+                            text = stringResource(R.string.calculator_action_calculate),
+                            color = PrimaryForeground,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
+                                lineHeight = CalculatorScreenTypography.buttonLineHeight
+                            )
                         )
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            NunitoText(
-                                text = stringResource(R.string.calculator_action_calculate),
-                                color = PrimaryForeground,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    letterSpacing = CalculatorScreenTypography.mediumLetterSpacing,
-                                    lineHeight = CalculatorScreenTypography.buttonLineHeight
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(CalculatorScreenDimens.inlineIconGap))
-                            Icon(
-                                painter = painterResource(R.drawable.arrow_right),
-                                contentDescription = null,
-                                tint = PrimaryForeground
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(CalculatorScreenDimens.inlineIconGap))
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_right),
+                            contentDescription = null,
+                            tint = PrimaryForeground
+                        )
                     }
                 }
             }
@@ -1054,7 +1047,7 @@ private fun IllustrationCard(
         shape = RoundedCornerShape(CalculatorScreenDimens.primaryCardCornerRadius),
         modifier = modifier
             .fillMaxWidth()
-            .height(CalculatorScreenDimens.illustrationCardHeight)
+            .heightIn(min = CalculatorScreenDimens.illustrationCardHeight)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -1078,7 +1071,7 @@ private fun IllustrationCard(
         }
         Column(
             modifier = Modifier.padding(CalculatorScreenDimens.illustrationCardPadding),
-            verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.illustrationTextGap)
+            verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.illustrationTextGap, alignment = Alignment.CenterVertically)
         ) {
             NunitoText(
                 text = stringResource(R.string.calculator_banner_title),
@@ -1099,89 +1092,6 @@ private fun IllustrationCard(
                 )
             )
         }
-    }
-}
-
-@Composable
-private fun QuoteCard(
-    quote: CalculatorQuoteUi,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = SurfaceCard,
-        shape = RoundedCornerShape(CalculatorScreenDimens.quoteCardCornerRadius),
-        modifier = modifier
-            .fillMaxWidth()
-            .border(
-                CalculatorScreenDimens.quoteCardBorderWidth,
-                Ink,
-                RoundedCornerShape(CalculatorScreenDimens.quoteCardCornerRadius)
-            )
-    ) {
-        Column(
-            modifier = Modifier.padding(CalculatorScreenDimens.quoteCardPadding),
-            verticalArrangement = Arrangement.spacedBy(CalculatorScreenDimens.quoteCardSectionGap)
-        ) {
-            NunitoText(
-                text = stringResource(R.string.calculator_quote_title),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            NunitoText(
-                text = quote.deliveryTypeLabel,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = InkSoft
-                )
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            QuoteRow(
-                title = stringResource(R.string.calculator_quote_route_label),
-                value = quote.routeLabel,
-                modifier = Modifier.fillMaxWidth()
-            )
-            QuoteRow(
-                title = stringResource(R.string.calculator_quote_eta_label),
-                value = stringResource(R.string.calculator_quote_eta_format, quote.etaDays),
-                modifier = Modifier.fillMaxWidth()
-            )
-            QuoteRow(
-                title = stringResource(R.string.calculator_quote_total_label),
-                value = stringResource(R.string.calculator_quote_amount_format, quote.amountRubles),
-                highlighted = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuoteRow(
-    title: String,
-    value: String,
-    highlighted: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        NunitoText(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = InkSoft
-            ),
-            modifier = Modifier.weight(CalculatorScreenDimens.fullWeight)
-        )
-        NunitoText(
-            text = value,
-            style = if (highlighted) {
-                MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black)
-            } else {
-                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-            },
-            textAlign = TextAlign.End
-        )
     }
 }
 
@@ -1296,7 +1206,6 @@ private object CalculatorScreenDimens {
     val loaderStrokeWidth = 2.dp
     val inlineIconGap = 8.dp
     val defaultBorderWidth = 1.dp
-    val quoteCardBorderWidth = 1.5.dp
     val primaryCardWeight = 1f
     val fullWeight = 1f
     val heroPrimaryWeight = 1.1f
@@ -1348,8 +1257,5 @@ private object CalculatorScreenDimens {
     const val illustrationRotation = 42.77f
     val illustrationCardPadding = 16.dp
     val illustrationTextGap = 4.dp
-    val quoteCardCornerRadius = 30.dp
-    val quoteCardPadding = 20.dp
-    val quoteCardSectionGap = 14.dp
     val zeroElevation = 0.dp
 }
